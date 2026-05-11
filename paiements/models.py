@@ -1,8 +1,8 @@
 # Create your models here.
 from django.db import models
 from django.conf import settings
-from apprenants.models import Apprenant
-from centre.models import AnneeAcademique
+from apprenants.models import Apprenant,Inscription
+from centre.models import AnneeAcademique,PeriodeMois
 
 
 class PaiementScolaire(models.Model):
@@ -27,8 +27,19 @@ class PaiementScolaire(models.Model):
         COMPLET  = 'COMPLET',  'Complet'
         PARTIEL  = 'PARTIEL',  'Partiel'
         ANNULE   = 'ANNULE',   'Annulé'
+        EN_ATTENTE = 'EN_ATTENTE', 'En attente'
 
+    inscription = models.ForeignKey(
+        Inscription,
+        on_delete=models.CASCADE,
+        related_name='paiements',
+        null=True, blank=True,
+        verbose_name="Inscription"
+    )    
+    date_fin_couverture = models.DateField(null=True, blank=True, verbose_name="Date de fin de couverture")
+    nombre_mois_couverts = models.PositiveIntegerField(default=1, verbose_name="Nombre de mois couverts")
     # Champs du diagramme
+
     montant_total    = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant total dû")
     montant_paye     = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Montant versé")
     reste_a_paye     = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Reste à payer")
@@ -68,7 +79,14 @@ class PaiementScolaire(models.Model):
                            null=True, blank=True,
                            related_name='paiements_annules'
                        )
-    mois_concerne    = models.CharField(max_length=20, blank=True, verbose_name="Mois concerné")
+    mois_concerne = models.ForeignKey(
+        PeriodeMois,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='paiements',
+        verbose_name="Mois concerné"
+    )
+
     created_at       = models.DateTimeField(auto_now_add=True)
     updated_at       = models.DateTimeField(auto_now=True)
 
@@ -87,11 +105,28 @@ class PaiementScolaire(models.Model):
             self.reste_a_paye = 0
             if self.status != self.Statut.ANNULE:
                 self.status = self.Statut.COMPLET
+                if self.inscription and self.mois_concerne:
+                    self._mettre_a_jour_couverture()
         else:
             if self.status != self.Statut.ANNULE:
                 self.status = self.Statut.PARTIEL
         super().save(*args, **kwargs)
-
+    def _mettre_a_jour_couverture(self):
+            """Met à jour la date de fin de couverture et réactive le compte si suspendu"""
+        # Calculer la date de fin de couverture
+        # Cette logique sera implémentée dans la vue
+    
+    def reactiver_compte_apres_paiement(self):
+        """Réactive automatiquement le compte après paiement"""
+        if self.inscription and self.inscription.statut == 'SUSPENDU':
+            # Vérifier si la dette est complètement payée
+            if self.inscription.get_dette_totale() <= 0:
+                self.inscription.statut = 'ACTIF'
+                self.inscription.user.is_active = True
+                self.inscription.user.save()
+                self.inscription.save()
+                return True
+        return False
 
 class Facture(models.Model):
     """
