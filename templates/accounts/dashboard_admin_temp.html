@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Dashboard Admin — RepetCenter{% endblock %}
+
+{% block page_title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+
+<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-serif font-bold text-slate-800">
+        Bonjour, {{ request.user.first_name }}
+      </h1>
+      <p class="text-sm text-slate-500 mt-1">
+        Bienvenue sur RepetCenter · Les modules arrivent progressivement.
+      </p>
+    </div>
+  </div>
+  
+  <div class="alert alert-info text-left">
+    <div class="flex items-start gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 text-blue-600">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M12 8v4"/>
+        <path d="M12 16h.01"/>
+      </svg>
+      <div class="text-blue-800">
+        Dashboard complet disponible au Jour 25. Les modules se construisent jour après jour.
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+```

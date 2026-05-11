@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Profil — RepetCenter{% endblock %}
+{% block page_title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- En-tête profil -->
+  <div class="flex items-center gap-5 card p-6">
+    
+    <!-- Avatar avec photo ou initiales + icône stylo -->
+    <div class="relative flex-shrink-0">
+      
+      <!-- Avatar -->
+      <div class="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white shadow-md">
+        {% if request.user.photo %}
+          <img src="{{ request.user.photo.url }}" alt="Photo de profil" 
+              class="w-full h-full object-cover">
+        {% else %}
+          <div class="w-full h-full flex items-center justify-center text-white text-3xl font-bold avatar-teal">
+            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Icône stylo -->
+      <label for="photo-input" 
+            class="absolute bottom-1 right-1 bg-white rounded-full p-2 shadow-lg border border-slate-300 cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600">
+          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+          <path d="m15 5 4 4"/>
+        </svg>
+      </label>
+    </div>
+    
+    <div>
+      <h2 class="text-2xl font-serif font-semibold text-slate-800">{{ request.user.get_full_name }}</h2>
+      <p class="text-base text-slate-500 mt-1">{{ request.user.email }}</p>
+      <div class="flex gap-2 mt-3">
+        <span class="badge
+          {% if request.user.is_admin %}badge-amber
+          {% elif request.user.is_enseignant %}badge-blue
+          {% else %}badge-teal{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          {{ request.user.get_role_display }}
+        </span>
+        <span class="badge badge-green">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          Actif
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire infos -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h3 class="card-title">Informations personnelles</h3>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data" class="space-y-5" id="profile-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_profile">
+        
+        <div class="grid grid-cols-2 gap-5">
+          <div>
+            <label class="form-label form-label-required">Prénom</label>
+            <input type="text" name="first_name" value="{{ request.user.first_name }}" required placeholder="Votre prénom" class="form-input">
+          </div>
+          <div>
+            <label class="form-label form-label-required">Nom</label>
+            <input type="text" name="last_name" value="{{ request.user.last_name }}" required placeholder="Votre nom" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Email</label>
+            <input type="email" value="{{ request.user.email }}" disabled class="form-input bg-slate-50 text-slate-400 cursor-not-allowed">
+          </div>
+          <div>
+            <label class="form-label">Téléphone</label>
+            <input type="text" name="phone" value="{{ request.user.phone|default:'' }}" placeholder="+237 6XX XXX XXX" class="form-input">
+          </div>
+        </div>
+
+        <!-- Champ photo caché -->
+        <input type="file" name="photo" accept="image/*" class="hidden" id="photo-input" onchange="document.getElementById('profile-form').submit()">
+
+        <div class="flex justify-end gap-3 pt-3">
+          <a href="{% url 'dashboard' %}" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            Annuler
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Changement mot de passe -->
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3 class="card-title">Changer le mot de passe</h3>
+      </div>
+    </div>
+    <div class="card-body">
+      
+      {% if request.session.password_reset_verified %}
+        <!-- Étape 3: Code vérifié - formulaire de nouveau mot de passe -->
+        <div class="alert alert-success mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><path d="M20 6 9 17l-5-5"/></svg>
+          <div>Code validé avec succès. Vous pouvez maintenant définir votre nouveau mot de passe.</div>
+        </div>
+        
+        <form method="post" action="{% url 'change_password_final' %}" class="space-y-5">
+          {% csrf_token %}
+          
+          <div class="grid grid-cols-2 gap-5">
+            <div class="col-span-2">
+              <label class="form-label form-label-required">Nouveau mot de passe</label>
+              <input type="password" name="new_password" placeholder="••••••••" required class="form-input">
+            </div>
+            <div class="col-span-2">
+              <label class="form-label form-label-required">Confirmer le mot de passe</label>
+              <input type="password" name="confirm_password" placeholder="••••••••" required class="form-input">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Minimum 8 caractères. Utilisez une combinaison de lettres, chiffres et symboles.</span>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <a href="{% url 'profile' %}" class="btn btn-ghost">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Changer le mot de passe
+            </button>
+          </div>
+        </form>
+        
+      {% elif request.session.password_reset_code_sent %}
+        <!-- Étape 2: Code envoyé - demander le code de validation -->
+        <div class="alert alert-info mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <div>Un code de validation a été envoyé à votre adresse email. Saisissez-le ci-dessous.</div>
+        </div>
+        
+        <form method="post" action="{% url 'verify_password_code' %}" class="space-y-5">
+          {% csrf_token %}
+          
+          <div>
+            <label class="form-label form-label-required">Code de validation</label>
+            <input type="text" name="verification_code" placeholder="Entrez le code reçu par email" required class="form-input text-center text-2xl tracking-widest">
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <a href="{% url 'profile' %}" class="btn btn-ghost">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Vérifier le code
+            </button>
+          </div>
+        </form>
+        
+      {% else %}
+        <!-- Étape 1: Formulaire initial - vérifier mot de passe actuel -->
+        <form method="post" action="{% url 'send_password_code' %}" class="space-y-5">
+          {% csrf_token %}
+          
+          <div class="grid grid-cols-2 gap-5">
+            <div class="col-span-2">
+              <label class="form-label form-label-required">Mot de passe actuel</label>
+              <input type="password" name="current_password" placeholder="••••••••" required class="form-input">
+            </div>
+            <div class="col-span-2">
+              <label class="form-label form-label-required">Nouveau mot de passe</label>
+              <input type="password" name="new_password" placeholder="••••••••" required class="form-input">
+            </div>
+            <div class="col-span-2">
+              <label class="form-label form-label-required">Confirmer le mot de passe</label>
+              <input type="password" name="confirm_password" placeholder="••••••••" required class="form-input">
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span>Minimum 8 caractères. Utilisez une combinaison de lettres, chiffres et symboles.</span>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Envoyer le code de validation
+            </button>
+          </div>
+        </form>
+      {% endif %}
+      
+    </div>
+  </div>
+
+</div>
+{% endblock %}

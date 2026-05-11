@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Configuration du Centre — RepetCenter{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6">
+
+  <!-- En-tête de page -->
+  <div class="page-header mb-6">
+    <div>
+      <h1 class="page-title">Configuration du Centre</h1>
+      <p class="page-description">
+        Nom, logo, adresse, téléphone, devise et année scolaire du centre.
+      </p>
+    </div>
+  </div>
+
+  <!-- Messages Django -->
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert {% if msg.tags == 'success' %}alert-success{% elif msg.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+          {% if msg.tags == 'success' %}
+            <path d="M20 6 9 17l-5-5"/>
+          {% elif msg.tags == 'error' %}
+            <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+          {% else %}
+            <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+          {% endif %}
+        </svg>
+        <div>{{ msg }}</div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- Carte : Identité du centre -->
+    <div class="card mb-5">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span class="card-title">Identité du centre</span>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- Logo -->
+        <div class="flex items-start gap-5 mb-6">
+          <div class="relative flex-shrink-0">
+            {% if centre.logo %}
+              <img src="{{ centre.logo.url }}"
+                   alt="Logo"
+                   class="w-20 h-20 rounded-2xl object-cover border border-slate-200 shadow-sm">
+            {% else %}
+              <div class="w-20 h-20 rounded-2xl avatar-teal flex items-center justify-center shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+              </div>
+            {% endif %}
+            <label for="{{ form.logo.id_for_label }}"
+                   class="absolute -bottom-2 -right-2 w-7 h-7 bg-white border border-slate-200
+                          rounded-full flex items-center justify-center cursor-pointer
+                          shadow-sm hover:bg-slate-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            </label>
+          </div>
+          <div>
+            <p class="form-hint mb-2">PNG, JPG ou JPEG · Max 5 MB</p>
+            {{ form.logo }}
+            {% if form.logo.errors %}
+              <p class="form-error">{{ form.logo.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Grille de champs -->
+        <div class="grid grid-cols-2 gap-4">
+
+          <!-- Nom du centre -->
+          <div class="form-group col-span-2 sm:col-span-1">
+            <label for="{{ form.name.id_for_label }}" class="form-label form-label-required">
+              Nom du centre
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <p class="form-error">{{ form.name.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-group">
+            <label for="{{ form.phone.id_for_label }}" class="form-label">
+              Téléphone
+            </label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <p class="form-error">{{ form.phone.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="{{ form.email.id_for_label }}" class="form-label">
+              Email
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <p class="form-error">{{ form.email.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Adresse (pleine largeur) -->
+          <div class="form-group col-span-2">
+            <label for="{{ form.address.id_for_label }}" class="form-label">
+              Adresse complète
+            </label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <p class="form-error">{{ form.address.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Devise -->
+          <div class="form-group">
+            <label for="{{ form.devise.id_for_label }}" class="form-label form-label-required">
+              Devise
+            </label>
+            {{ form.devise }}
+            {% if form.devise.errors %}
+              <p class="form-error">{{ form.devise.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Année scolaire -->
+          <div class="form-group">
+            <label for="{{ form.annee_academique.id_for_label }}" class="form-label">
+              Année scolaire en cours
+            </label>
+            {{ form.annee_academique }}
+            {% if form.annee_academique.errors %}
+              <p class="form-error">{{ form.annee_academique.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+        </div><!-- /grid -->
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+          <a href="{% url 'centre:config' %}" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            Annuler
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer la configuration
+          </button>
+        </div>
+
+      </div>
+    </div><!-- /card -->
+
+    <!-- Note d'information -->
+    <div class="alert alert-info">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <p>
+        Les informations du centre apparaissent sur toutes les
+        <strong>factures PDF</strong> et <strong>bulletins</strong> générés automatiquement.
+      </p>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

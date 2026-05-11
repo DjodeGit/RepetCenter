@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Matières & Niveaux — RepetCenter{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- En-tête de page -->
+  <div class="page-header mb-6">
+    <h1 class="page-title">Matières & Niveaux / Groupes</h1>
+    <p class="page-description">
+      Créer et gérer les disciplines enseignées et les groupes d'apprenants.
+    </p>
+  </div>
+
+  <!-- Messages Django -->
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert {% if msg.tags == 'success' %}alert-success{% elif msg.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+          {% if msg.tags == 'success' %}
+            <path d="M20 6 9 17l-5-5"/>
+          {% elif msg.tags == 'error' %}
+            <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+          {% else %}
+            <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+          {% endif %}
+        </svg>
+        <div>{{ msg }}</div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Deux colonnes : Matières | Niveaux -->
+  <div class="grid grid-cols-2 gap-5">
+
+    <!-- ════════════════════ MATIÈRES ════════════════════ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <span class="card-title">Matières enseignées</span>
+          </div>
+          <button onclick="document.getElementById('modal-matiere').classList.remove('hidden')"
+                  class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Ajouter
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        {% if matieres %}
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Matière</th>
+                  <th>Description</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for matiere in matieres %}
+                  <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="font-semibold text-slate-700">{{ matiere.name }}</td>
+                    <td class="text-slate-400">{{ matiere.description|default:"—" }}</td>
+                    <td class="whitespace-nowrap">
+                      <div class="flex gap-1">
+                        <a href="{% url 'centre:modifier_matiere' matiere.pk %}"
+                           class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </a>
+                        <form method="post"
+                              action="{% url 'centre:supprimer_matiere' matiere.pk %}"
+                              onsubmit="return confirm('Supprimer « {{ matiere.name }} » ?')">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-12 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3 text-slate-300"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <p class="text-sm">Aucune matière pour l'instant.</p>
+            <p class="text-xs mt-1">Cliquez sur « Ajouter » pour commencer.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ════════════════════ NIVEAUX ════════════════════ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+            </div>
+            <span class="card-title">Niveaux / Groupes</span>
+          </div>
+          <button onclick="document.getElementById('modal-niveau').classList.remove('hidden')"
+                  class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Créer
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        {% if niveaux %}
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Niveau</th>
+                  <th>Effectif</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for niveau in niveaux %}
+                  <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="font-semibold text-slate-700">{{ niveau.name }}</td>
+                    <td>
+                      <span class="badge badge-teal">
+                        {{ niveau.effectif }} élève{{ niveau.effectif|pluralize }}
+                      </span>
+                    </td>
+                    <td class="whitespace-nowrap">
+                      <div class="flex gap-1">
+                        <a href="{% url 'centre:modifier_niveau' niveau.pk %}"
+                           class="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </a>
+                        <form method="post"
+                              action="{% url 'centre:supprimer_niveau' niveau.pk %}"
+                              onsubmit="return confirm('Supprimer « {{ niveau.name }} » ?')">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-12 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3 text-slate-300"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+            <p class="text-sm">Aucun niveau pour l'instant.</p>
+            <p class="text-xs mt-1">Cliquez sur « Créer » pour commencer.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+</div>
+
+<!-- ════════════════════ MODAL AJOUTER MATIÈRE ════════════════════ -->
+<div id="modal-matiere"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-semibold text-slate-800">Ajouter une matière</h2>
+      <button onclick="document.getElementById('modal-matiere').classList.add('hidden')"
+              class="text-slate-400 hover:text-slate-600 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="space-y-4">
+
+        <div class="form-group">
+          <label class="form-label form-label-required">Nom de la matière</label>
+          {{ matiere_form.name }}
+          {% if matiere_form.name.errors %}
+            <p class="form-error">{{ matiere_form.name.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description courte</label>
+          {{ matiere_form.description }}
+          {% if matiere_form.description.errors %}
+            <p class="form-error">{{ matiere_form.description.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button"
+                onclick="document.getElementById('modal-matiere').classList.add('hidden')"
+                class="btn btn-ghost">
+          Annuler
+        </button>
+        <button type="submit" name="add_matiere" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- ════════════════════ MODAL CRÉER NIVEAU ════════════════════ -->
+<div id="modal-niveau"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-base font-semibold text-slate-800">Créer un niveau / groupe</h2>
+      <button onclick="document.getElementById('modal-niveau').classList.add('hidden')"
+              class="text-slate-400 hover:text-slate-600 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="grid grid-cols-2 gap-4">
+
+        <div class="form-group col-span-2">
+          <label class="form-label form-label-required">Nom du niveau</label>
+          {{ niveau_form.name }}
+          {% if niveau_form.name.errors %}
+            <p class="form-error">{{ niveau_form.name.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group col-span-2">
+          <label class="form-label">Description</label>
+          {{ niveau_form.description }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Frais d'inscription ({{ centre.devise }})</label>
+          {{ niveau_form.frais_inscription }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frais mensuel ({{ centre.devise }})</label>
+          {{ niveau_form.frais_mensuel }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frais trimestriel ({{ centre.devise }})</label>
+          {{ niveau_form.frais_trimestriel }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frais annuel ({{ centre.devise }})</label>
+          {{ niveau_form.frais_annuel }}
+        </div>
+
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button type="button"
+                onclick="document.getElementById('modal-niveau').classList.add('hidden')"
+                class="btn btn-ghost">
+          Annuler
+        </button>
+        <button type="submit" name="add_niveau" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Créer le niveau
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}
