@@ -74,7 +74,7 @@ class AnneeAcademique(models.Model):
     description = models.TextField(blank=True)
     is_active   = models.BooleanField(default=False, verbose_name="Année en cours")
 
-    # Champ supplémentaire nécessaire
+    # Champ s   upplémentaire nécessaire
     centre = models.ForeignKey(
                  Centre,
                  on_delete=models.CASCADE,
@@ -149,3 +149,40 @@ class Classe(models.Model):
 
     def get_effectif(self):
         return self.apprenants.filter(statut='ACTIF').count()
+    
+
+class PeriodeMois(models.Model):
+    """
+    Définition d'un mois dans l'année académique
+    """
+    annee = models.ForeignKey(AnneeAcademique, on_delete=models.CASCADE, related_name='mois')
+    numero = models.PositiveIntegerField()  # 1, 2, 3...
+    nom = models.CharField(max_length=50)  # "Septembre", "Octobre", etc.
+    
+    class Meta:
+        unique_together = ['annee', 'numero']
+        ordering = ['numero']
+        verbose_name = "Mois"
+        verbose_name_plural = "Mois"
+    
+    def __str__(self):
+        return f"{self.nom} ({self.annee.libelle})"
+
+
+class Trimestre(models.Model):
+    """
+    Définition d'un trimestre dans l'année académique
+    """
+    annee = models.ForeignKey(AnneeAcademique, on_delete=models.CASCADE, related_name='trimestres')
+    ordre = models.PositiveIntegerField()  # 1, 2, 3, 4
+    nom = models.CharField(max_length=50)  # "Trimestre 1", "Premier trimestre", etc.
+    mois = models.ManyToManyField(PeriodeMois, related_name='trimestres', blank=True)
+    
+    class Meta:
+        unique_together = ['annee', 'ordre']
+        ordering = ['ordre']
+        verbose_name = "Trimestre"
+        verbose_name_plural = "Trimestres"
+    
+    def __str__(self):
+        return f"{self.annee.libelle} - {self.nom}"
