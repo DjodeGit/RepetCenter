@@ -391,7 +391,6 @@ def creer_compte(request):
         temp_password = generate_random_password()
 
         user = User.objects.create_user(
-            username=email,
             email=email,
             password=temp_password,
             first_name=first_name,
