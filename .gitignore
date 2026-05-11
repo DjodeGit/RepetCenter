@@ -1,0 +1,14 @@
+virtuel/
+.env
+node_modules/
+__pycache__/
+*.pyc
+db.sqlite3
+*.log
+local_settings.py
+/staticfiles/
+/media/
+/static/src/output.css
+.vscode/
+.idea/
+.DS_Store
