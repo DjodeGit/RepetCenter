@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurer les périodes — RepetCenter{% endblock %}
+{% block page_title %}Configuration des périodes scolaires{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+
+  <div class="card mb-6">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        <h2 class="card-title">Définir la structure de l'année</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      
+      <form method="post" id="periodes-form">
+        {% csrf_token %}
+        
+        <div class="form-group mb-6">
+          <label class="form-label form-label-required">Année académique</label>
+          <select name="annee_id" class="form-select" onchange="this.form.submit()">
+            {% for annee in annees %}
+              <option value="{{ annee.id }}" {% if annee_selectionnee and annee_selectionnee.id == annee.id %}selected{% endif %}>
+                {{ annee.libelle }} {% if annee.is_active %}(Active){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        {% if annee_selectionnee %}
+        <div class="alert alert-info mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <div>Configurez les trimestres et les mois pour l'année <strong>{{ annee_selectionnee.libelle }}</strong>.</div>
+        </div>
+        
+        <div id="trimestres-container">
+          <div class="flex justify-between items-center mb-4">
+            <label class="form-label">Nombre de trimestres</label>
+            <button type="button" id="ajouter-trimestre" class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+              Ajouter un trimestre
+            </button>
+          </div>
+          <input type="hidden" name="nombre_trimestres" id="nombre_trimestres" value="0">
+          <div id="trimestres-list" class="space-y-4"></div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+          <a href="{% url 'dashboard_admin' %}" class="btn btn-ghost">Annuler</a>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer la configuration
+          </button>
+        </div>
+        {% endif %}
+        
+      </form>
+      
+    </div>
+  </div>
+  
+</div>
+
+<script>
+  let trimestreCount = 0;
+  const moisNoms = {{ mois_noms|safe }};
+  
+  function ajouterTrimestre() {
+    trimestreCount++;
+    document.getElementById('nombre_trimestres').value = trimestreCount;
+    
+    const container = document.getElementById('trimestres-list');
+    const trimestreDiv = document.createElement('div');
+    trimestreDiv.className = 'card p-4 border border-slate-200';
+    trimestreDiv.id = `trimestre-${trimestreCount}`;
+    
+    trimestreDiv.innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="font-semibold text-slate-700">Trimestre ${trimestreCount}</h4>
+        <button type="button" class="text-red-500 hover:text-red-700" onclick="supprimerTrimestre(${trimestreCount})">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="form-group">
+          <label class="form-label">Nom du trimestre</label>
+          <input type="text" name="trimestre_${trimestreCount}_nom" class="form-input" value="Trimestre ${trimestreCount}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre de mois</label>
+          <input type="number" name="trimestre_${trimestreCount}_mois" class="form-input" min="1" max="12" value="3" required onchange="genererMois(${trimestreCount})">
+        </div>
+      </div>
+      <div id="mois-${trimestreCount}" class="grid grid-cols-3 gap-3"></div>
+    `;
+    
+    container.appendChild(trimestreDiv);
+    genererMois(trimestreCount);
+  }
+  
+  function genererMois(trimestreId) {
+    const moisInput = document.querySelector(`input[name="trimestre_${trimestreId}_mois"]`);
+    const nbMois = parseInt(moisInput.value) || 0;
+    const container = document.getElementById(`mois-${trimestreId}`);
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= nbMois; i++) {
+      const moisDiv = document.createElement('div');
+      moisDiv.className = 'form-group';
+      moisDiv.innerHTML = `
+        <label class="form-label">Mois ${i}</label>
+        <input type="text" name="trimestre_${trimestreId}_mois_${i}" class="form-input" placeholder="Ex: Septembre" required>
+      `;
+      container.appendChild(moisDiv);
+    }
+  }
+  
+  function supprimerTrimestre(id) {
+    const element = document.getElementById(`trimestre-${id}`);
+    if (element) element.remove();
+    // Recompter les trimestres restants
+    const trimestresRestants = document.querySelectorAll('#trimestres-list .card').length;
+    document.getElementById('nombre_trimestres').value = trimestresRestants;
+    trimestreCount = trimestresRestants;
+  }
+  
+  document.getElementById('ajouter-trimestre').addEventListener('click', ajouterTrimestre);
+  
+  // Ajouter un premier trimestre par défaut
+  if (document.getElementById('trimestres-list').children.length === 0) {
+    ajouterTrimestre();
+  }
+</script>
+{% endblock %}
