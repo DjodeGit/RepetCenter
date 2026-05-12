@@ -143,3 +143,7 @@ class Inscription(models.Model):
     def est_a_jour(self):
         """Vérifie si l'apprenant est à jour de ses paiements"""
         return self.get_dette_totale() <= 0
+    
+    def get_frais_inscription_montant(self):
+        """Retourne le montant des frais d'inscription du niveau"""
+        return self.niveau.frais_inscription
