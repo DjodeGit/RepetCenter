@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Centre, Matiere,Classe
+from .models import Centre, Matiere,Classe,AnneeAcademique, PeriodeMois, Trimestre
 from centre.models import Centre
 from .forms import CentreForm, MatiereForm, NiveauForm, FraisNiveauForm
 
@@ -201,3 +201,64 @@ def frais_niveaux(request):
         "frais_form": frais_form,
         "page_title": "Frais par Niveau",
     })
+
+# Periodes
+@admin_required
+def configurer_periodes(request, annee_id=None):
+    """
+    Configuration des mois et trimestres pour une année académique
+    """
+    annees = AnneeAcademique.objects.all().order_by('-date_debut')
+    annee_selectionnee = None
+    
+    if annee_id:
+        annee_selectionnee = get_object_or_404(AnneeAcademique, pk=annee_id)
+    elif annees.exists():
+        annee_selectionnee = annees.filter(is_active=True).first() or annees.first()
+    
+    if request.method == 'POST':
+        annee_id = request.POST.get('annee_id')
+        annee = get_object_or_404(AnneeAcademique, pk=annee_id)
+        
+        # Supprimer les anciennes configurations
+        PeriodeMois.objects.filter(annee=annee).delete()
+        Trimestre.objects.filter(annee=annee).delete()
+        
+        # Récupérer les données
+        nombre_trimestres = int(request.POST.get('nombre_trimestres', 0))
+        
+        for t in range(1, nombre_trimestres + 1):
+            ordre = t
+            nom_trimestre = request.POST.get(f'trimestre_{t}_nom', f'Trimestre {t}')
+            nombre_mois = int(request.POST.get(f'trimestre_{t}_mois', 0))
+            
+            trimestre = Trimestre.objects.create(
+                annee=annee,
+                ordre=ordre,
+                nom=nom_trimestre
+            )
+            
+            mois_du_trimestre = []
+            for m in range(1, nombre_mois + 1):
+                num_mois_global = len(PeriodeMois.objects.filter(annee=annee)) + 1
+                nom_mois = request.POST.get(f'trimestre_{t}_mois_{m}', f'Mois {num_mois_global}')
+                
+                mois = PeriodeMois.objects.create(
+                    annee=annee,
+                    numero=num_mois_global,
+                    nom=nom_mois
+                )
+                mois_du_trimestre.append(mois)
+            
+            trimestre.mois.set(mois_du_trimestre)
+        
+        messages.success(request, f"Configuration de l'année {annee.libelle} enregistrée avec succès.")
+        return redirect('configurer_periodes', annee_id=annee.id)
+    
+    context = {
+        'annees': annees,
+        'annee_selectionnee': annee_selectionnee,
+        'mois_noms': ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+    }
+    return render(request, 'centre/configurer_periodes.html', context)
