@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des apprenants — RepetCenter{% endblock %}
+{% block page_title %}Liste des apprenants{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6">
+
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="page-title">Apprenants</h1>
+      <p class="page-description">
+        {% if annee_active %}Année {{ annee_active.libelle }} - {% endif %}
+        {{ total_inscriptions }} inscrit{{ total_inscriptions|pluralize }},
+        {{ total_actifs }} actif{{ total_actifs|pluralize }}
+      </p>
+    </div>
+    <a href="{% url 'apprenants:inscrire' %}" class="btn btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+      Inscrire un apprenant
+    </a>
+  </div>
+
+  <!-- Filtres -->
+  <form method="get" class="flex flex-wrap gap-3 mb-6 items-center">
+    <div class="relative flex-1 min-w-[200px]">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+      </div>
+      <input type="text" name="q" value="{{ q }}" class="form-input pl-8" placeholder="Rechercher par nom, email, matricule...">
+    </div>
+    <select name="classe" class="form-select w-44">
+      <option value="">Tous les niveaux</option>
+      {% for classe in classes %}
+        <option value="{{ classe.id }}" {% if classe_filtre == classe.id|stringformat:"s" %}selected{% endif %}>
+          {{ classe.name }}
+        </option>
+      {% endfor %}
+    </select>
+    <select name="statut" class="form-select w-40">
+      <option value="">Tous statuts</option>
+      {% for val, label in statuts %}
+        <option value="{{ val }}" {% if statut_filtre == val %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+    <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost btn-sm">Réinitialiser</a>
+  </form>
+
+  <!-- Tableau -->
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Matricule</th>
+          <th>Apprenant</th>
+          <th>Niveau</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inscription in inscriptions %}
+        <tr>
+          <td class="whitespace-nowrap font-mono text-xs">{{ inscription.apprenant.matricule }}</td>
+          <td class="whitespace-nowrap">
+            <div class="flex items-center gap-2">
+              <div class="avatar avatar-sm avatar-teal">
+                {{ inscription.apprenant.user.first_name|first|upper }}{{ inscription.apprenant.user.last_name|first|upper }}
+              </div>
+              <div>
+                <div class="font-semibold text-sm">{{ inscription.apprenant.user.get_full_name }}</div>
+                <div class="text-xs text-slate-400">{{ inscription.apprenant.user.email }}</div>
+              </div>
+            </div>
+           </div>
+          </div>
+          </div>
+          </td>
+          <td class="whitespace-nowrap">
+            <span class="badge badge-teal">{{ inscription.niveau.name }}</span>
+          </div>
+          </div>
+          </td>
+          <td class="whitespace-nowrap">
+            <span class="badge {% if inscription.statut == 'ACTIF' %}badge-green{% elif inscription.statut == 'SUSPENDU' %}badge-amber{% elif inscription.statut == 'SORTI' %}badge-red{% else %}badge-gray{% endif %}">
+              {{ inscription.get_statut_display }}
+            </span>
+          </div>
+          </div>
+          </td>
+          <td class="whitespace-nowrap">
+            <a href="{% url 'fiche_apprenant' inscription.id %}" class="btn btn-ghost btn-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Voir
+            </a>
+          </div>
+          </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-12 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-300"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Aucun apprenant trouvé.
+            <a href="{% url 'apprenants:inscrire' %}" class="text-teal-600 hover:underline block mt-2">Inscrire le premier apprenant</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

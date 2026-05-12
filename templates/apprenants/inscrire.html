@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscrire un apprenant — RepetCenter{% endblock %}
+{% block page_title %}Inscrire un apprenant{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h2 class="card-title">Inscription d'un apprenant</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      
+      <div class="alert alert-info mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        <div>Année académique : <strong>{{ annee_active.libelle }}</strong></div>
+      </div>
+      
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 gap-5">
+          
+          <!-- Sélection de l'apprenant -->
+          <div class="form-group">
+            <label class="form-label form-label-required">Apprenant</label>
+            <select name="user_id" class="form-select" required>
+              <option value="">-- Sélectionner un apprenant --</option>
+              {% for user in apprenants_sans_inscription %}
+                <option value="{{ user.id }}" {% if form_data.user_id == user.id|stringformat:"s" %}selected{% endif %}>
+                  {{ user.get_full_name }} - {{ user.email }}
+                </option>
+              {% endfor %}
+            </select>
+            {% if not apprenants_sans_inscription %}
+              <p class="text-sm text-amber-600 mt-2">
+                ⚠️ Tous les apprenants sont déjà inscrits pour cette année.
+                <a href="{% url 'gestion_comptes' %}" class="text-teal-600 hover:underline">Créer un nouveau compte apprenant</a>
+              </p>
+            {% endif %}
+          </div>
+          
+          <!-- Sélection du niveau -->
+          <div class="form-group">
+            <label class="form-label form-label-required">Niveau / Classe</label>
+            <select name="classe" id="classe-select" class="form-select" required>
+              <option value="">-- Sélectionner un niveau --</option>
+              {% for classe in classes %}
+                <option value="{{ classe.id }}" 
+                        data-frais="{{ classe.frais_inscription }}"
+                        {% if form_data.classe == classe.id|stringformat:"s" %}selected{% endif %}>
+                  {{ classe.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Affichage automatique des frais d'inscription -->
+          <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <div class="flex justify-between items-center">
+              <span class="font-semibold text-slate-700">Frais d'inscription :</span>
+              <span id="frais-inscription" class="text-xl font-bold text-teal-600">0 FCFA</span>
+            </div>
+            <div class="mt-3 flex items-center gap-3">
+              <input type="checkbox" name="frais_inscription_paye" id="frais_paye" class="w-4 h-4 text-teal-600 rounded">
+              <label for="frais_paye" class="text-sm text-slate-600"> Les frais d'inscription ont été payés (espèces)</label>
+            </div>
+          </div>
+          
+          <!-- Mode de paiement -->
+          <div class="form-group">
+            <label class="form-label form-label-required">Mode de paiement des frais mensuels</label>
+            <select name="mode_paiement" class="form-select">
+              <option value="MENSUEL" {% if form_data.mode_paiement == 'MENSUEL' %}selected{% endif %}>Mensuel</option>
+              <option value="TRIMESTRIEL" {% if form_data.mode_paiement == 'TRIMESTRIEL' %}selected{% endif %}>Trimestriel</option>
+              <option value="ANNUEL" {% if form_data.mode_paiement == 'ANNUEL' %}selected{% endif %}>Annuel</option>
+            </select>
+          </div>
+          
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+          <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost">Annuler</a>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Valider l'inscription
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mettre à jour l'affichage des frais d'inscription quand le niveau change
+  const classeSelect = document.getElementById('classe-select');
+  const fraisSpan = document.getElementById('frais-inscription');
+  
+  function updateFrais() {
+    const selectedOption = classeSelect.options[classeSelect.selectedIndex];
+    const frais = selectedOption.getAttribute('data-frais') || 0;
+    fraisSpan.textContent = parseInt(frais).toLocaleString() + ' FCFA';
+  }
+  
+  classeSelect.addEventListener('change', updateFrais);
+  updateFrais();
+</script>
+{% endblock %}
