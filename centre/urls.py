@@ -13,6 +13,8 @@ urlpatterns = [
     path("matieres/<int:pk>/supprimer/", views.supprimer_matiere, name="supprimer_matiere"),
     path("niveaux/<int:pk>/modifier/", views.modifier_niveau, name="modifier_niveau"),
     path("niveaux/<int:pk>/supprimer/", views.supprimer_niveau, name="supprimer_niveau"),
+    path('configurer-periodes/<int:annee_id>/', views.configurer_periodes, name='configurer_periodes'),
+    path('configurer-periodes/', views.configurer_periodes, name='configurer_periodes'),
 
     # M08 — Frais par niveau
     path("frais-niveaux/", views.frais_niveaux, name="frais_niveaux"),
