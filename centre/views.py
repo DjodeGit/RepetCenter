@@ -1,4 +1,9 @@
-from django.shortcuts import render
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import models
+from django.template.loader import render_to_string
+from django.http import JsonResponse
+
 
 # Create your views here.
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,6 +12,7 @@ from django.contrib import messages
 from .models import Centre, Matiere,Classe,AnneeAcademique, PeriodeMois, Trimestre
 from centre.models import Centre
 from .forms import CentreForm, MatiereForm, NiveauForm, FraisNiveauForm
+from django.core.paginator import Paginator
 
 
 def admin_required(view_func):
@@ -51,116 +57,192 @@ def config_centre(request):
 # M07 · Matières & Niveaux
 # ─────────────────────────────────────────────────────────────────────────────
 
-@admin_required
-def matieres_niveaux(request):
-    """Liste les matières et niveaux. Gère l'ajout via formulaires inline."""
-    centre = Centre.get_centre()
-    matieres = Matiere.objects.all()
-    niveaux = Classe.objects.all()
-    matiere_form = MatiereForm()
-    niveau_form = NiveauForm()
+# ==================== MATIÈRES (VUES SÉPARÉES) ====================
 
-    if request.method == "POST":
-        # ── Ajout d'une matière ──────────────────────────────────────────────
-        if "add_matiere" in request.POST:
-            matiere_form = MatiereForm(request.POST)
-            if matiere_form.is_valid():
-                obj = matiere_form.save(commit=False)
-                obj.centre = centre
-                obj.save()
-                messages.success(request, f"Matière « {obj.name} » ajoutée.")
-                return redirect("centre:matieres_niveaux")
-            else:
-                messages.error(request, "Erreur lors de l'ajout de la matière.")
-
-        # ── Ajout d'un niveau ────────────────────────────────────────────────
-        elif "add_niveau" in request.POST:
-            niveau_form = NiveauForm(request.POST)
-            if niveau_form.is_valid():
-                obj = niveau_form.save(commit=False)
-                obj.centre = centre
-                obj.save()
-                messages.success(request, f"Niveau « {obj.name} » créé.")
-                return redirect("centre:matieres_niveaux")
-            else:
-                messages.error(request, "Erreur lors de la création du niveau.")
-
-    return render(request, "centre/matieres_niveaux.html", {
-        "matieres": matieres,
-        "niveaux": niveaux,
-        "matiere_form": matiere_form,
-        "niveau_form": niveau_form,
-        "centre": centre,
-        "page_title": "Matières & Niveaux",
-    })
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import models
+from django.template.loader import render_to_string
+from django.http import JsonResponse
 
 @admin_required
-def modifier_matiere(request, pk):
-    """Modification d'une matière existante."""
+def matieres_liste(request):
+    """Liste des matières avec pagination et recherche en AJAX"""
     centre = Centre.get_centre()
+    search_query = request.GET.get('search', '').strip()
+    
+    matieres = Matiere.objects.all().order_by('name')
+    
+    if search_query:
+        matieres = matieres.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(description__icontains=search_query)
+        )
+    
+    # Pagination : 10 éléments par page
+    paginator = Paginator(matieres, 5)
+    page = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    
+    # Si c'est une requête AJAX, on retourne uniquement le HTML des lignes et de la pagination
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        rows_html = render_to_string('centre/partials/matieres_table_rows.html', {'page_obj': page_obj})
+        pagination_html = render_to_string('centre/partials/matieres_pagination.html', {'page_obj': page_obj})
+        return JsonResponse({
+            'rows_html': rows_html,
+            'pagination_html': pagination_html,
+        })
+    
+    context = {
+        'page_obj': page_obj,
+        'centre': centre,
+        'search_query': search_query,
+        'page_title': 'Gestion des matières',
+    }
+    return render(request, 'centre/matieres_liste.html', context)
+
+@admin_required
+def ajouter_matiere(request):
+    """Ajout d'une matière via modal (AJAX)"""
+    if request.method == 'POST':
+        form = MatiereForm(request.POST)
+        if form.is_valid():
+            matiere = form.save(commit=False)
+            matiere.centre = Centre.get_centre()
+            matiere.save()
+            messages.success(request, f'Matière « {matiere.name} » ajoutée avec succès.')
+            return redirect('centre:matieres_liste')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    return redirect('centre:matieres_liste')
+
+
+@admin_required
+def modifier_matiere_modal(request, pk):
+    """Modification d'une matière via modal (AJAX)"""
     matiere = get_object_or_404(Matiere, pk=pk)
-
-    if request.method == "POST":
+    
+    if request.method == 'POST':
         form = MatiereForm(request.POST, instance=matiere)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Matière « {matiere.name} » mise à jour.")
-            return redirect("centre:matieres_niveaux")
-    else:
-        form = MatiereForm(instance=matiere)
-
-    return render(request, "centre/modifier_matiere.html", {
-        "form": form,
-        "matiere": matiere,
-        "page_title": f"Modifier — {matiere.name}",
-    })
+            messages.success(request, f'Matière « {matiere.name} » modifiée avec succès.')
+            return redirect('centre:matieres_liste')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    return redirect('centre:matieres_liste')
 
 
 @admin_required
-def supprimer_matiere(request, pk):
-    """Suppression d'une matière (POST uniquement)."""
-    centre = Centre.get_centre()
+def supprimer_matiere_modal(request, pk):
+    """Suppression d'une matière via modal"""
     matiere = get_object_or_404(Matiere, pk=pk)
-    if request.method == "POST":
+    if request.method == 'POST':
         nom = matiere.name
         matiere.delete()
-        messages.success(request, f"Matière « {nom} » supprimée.")
-    return redirect("centre:matieres_niveaux")
+        messages.success(request, f'Matière « {nom} » supprimée avec succès.')
+    return redirect('centre:matieres_liste')
+
+
+# ==================== NIVEAUX (VUES SÉPARÉES) ====================
+
+@admin_required
+def niveaux_liste(request):
+    """Liste des niveaux avec pagination et recherche en AJAX"""
+    centre = Centre.get_centre()
+    search_query = request.GET.get('search', '').strip()
+    
+    niveaux = Classe.objects.all().order_by('name')
+    
+    if search_query:
+        niveaux = niveaux.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(description__icontains=search_query)
+        )
+    
+    # Pagination : 10 éléments par page
+    paginator = Paginator(niveaux, 10)
+    page = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    
+    # Si c'est une requête AJAX, on retourne uniquement le HTML des lignes et de la pagination
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        rows_html = render_to_string('centre/partials/niveaux_table_rows.html', {'page_obj': page_obj})
+        pagination_html = render_to_string('centre/partials/niveaux_pagination.html', {'page_obj': page_obj})
+        return JsonResponse({
+            'rows_html': rows_html,
+            'pagination_html': pagination_html,
+        })
+    
+    context = {
+        'page_obj': page_obj,
+        'centre': centre,
+        'search_query': search_query,
+        'page_title': 'Gestion des niveaux',
+    }
+    return render(request, 'centre/niveaux_liste.html', context)
 
 
 @admin_required
-def modifier_niveau(request, pk):
-    """Modification d'un niveau (nom + frais)."""
-    centre = Centre.get_centre()
-    niveau = get_object_or_404(Classe, pk=pk)
+def ajouter_niveau(request):
+    """Ajout d'un niveau via modal"""
+    if request.method == 'POST':
+        form = NiveauForm(request.POST)
+        if form.is_valid():
+            niveau = form.save(commit=False)
+            niveau.centre = Centre.get_centre()
+            niveau.save()
+            messages.success(request, f'Niveau « {niveau.name} » créé avec succès.')
+            return redirect('centre:niveaux_liste')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    return redirect('centre:niveaux_liste')
 
-    if request.method == "POST":
+
+@admin_required
+def modifier_niveau_modal(request, pk):
+    """Modification d'un niveau via modal"""
+    niveau = get_object_or_404(Classe, pk=pk)
+    
+    if request.method == 'POST':
         form = NiveauForm(request.POST, instance=niveau)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Niveau « {niveau.name} » mis à jour.")
-            return redirect("centre:matieres_niveaux")
-    else:
-        form = NiveauForm(instance=niveau)
-
-    return render(request, "centre/modifier_niveau.html", {
-        "form": form,
-        "niveau": niveau,
-        "page_title": f"Modifier — {niveau.name}",
-    })
+            messages.success(request, f'Niveau « {niveau.name} » modifié avec succès.')
+            return redirect('centre:niveaux_liste')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    return redirect('centre:niveaux_liste')
 
 
 @admin_required
-def supprimer_niveau(request, pk):
-    """Suppression d'un niveau (POST uniquement)."""
-    centre = Centre.get_centre()
+def supprimer_niveau_modal(request, pk):
+    """Suppression d'un niveau via modal"""
     niveau = get_object_or_404(Classe, pk=pk)
-    if request.method == "POST":
+    if request.method == 'POST':
         nom = niveau.name
         niveau.delete()
-        messages.success(request, f"Niveau « {nom} » supprimé.")
-    return redirect("centre:matieres_niveaux")
+        messages.success(request, f'Niveau « {nom} » supprimé avec succès.')
+    return redirect('centre:niveaux_liste')
 
 
 # ─────────────────────────────────────────────────────────────────────────────

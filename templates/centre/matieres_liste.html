@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Matières — RepetCenter{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8">
+
+  <!-- En-tête -->
+  <div class="relative mb-8">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-800">Matières enseignées</h1>
+        </div>
+        <p class="text-slate-500 text-sm">Liste des disciplines du centre</p>
+      </div>
+      <button onclick="openMatiereModal()" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        Nouvelle matière
+      </button>
+    </div>
+  </div>
+
+  <!-- Barre de recherche -->
+  <div class="mb-6">
+    <div class="relative max-w-md">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+      </div>
+      <input type="text" id="search-input" placeholder="Rechercher une matière..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-hidden focus:border-teal-400 focus:ring-2 focus:ring-teal-400/10 transition-all duration-200">
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div id="messages-container">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert {% if msg.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} mb-4 rounded-xl alert-auto-hide">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+            {% if msg.tags == 'success' %}<path d="M20 6 9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>{% endif %}
+          </svg>
+          <div>{{ msg }}</div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Indicateur de chargement global -->
+  <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl shadow-xl p-6 flex flex-col items-center gap-3">
+      <svg class="animate-spin h-8 w-8 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-slate-600 text-sm">Chargement en cours...</p>
+    </div>
+  </div>
+
+  <!-- Tableau des matières avec ID pour mise à jour dynamique -->
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" id="table-container">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Matière</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+            <th class="px-4 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          {% include "centre/partials/matieres_table_rows.html" %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-slate-200 bg-slate-50" id="pagination-container">
+      {% include "centre/partials/matieres_pagination.html" %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== MODAL AJOUTER MATIÈRE ========== -->
+<div id="modal-ajouter-matiere" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all duration-300">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-800">Ajouter une matière</h2>
+      </div>
+      <button onclick="closeModal('modal-ajouter-matiere')" class="text-slate-400 hover:text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{% url 'centre:ajouter_matiere' %}" id="form-ajouter-matiere">
+      {% csrf_token %}
+      <div class="p-6 space-y-5">
+        <div class="space-y-2">
+          <label class="form-label font-semibold">Nom de la matière <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <input type="text" name="name" class="form-input w-full pl-9" placeholder="Ex: Mathématiques" required>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label class="form-label text-slate-700">Description courte</label>
+          <div class="relative">
+            <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <textarea name="description" rows="3" class="form-textarea w-full pl-9" placeholder="Description optionnelle"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-6 pt-0 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+        <button type="button" onclick="closeModal('modal-ajouter-matiere')" class="btn btn-ghost">Annuler</button>
+        <button type="submit" class="btn btn-primary relative" id="btn-ajouter-matiere">
+          <span class="btn-text">Enregistrer</span>
+          <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-teal-600 rounded-lg">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MODAL MODIFIER MATIÈRE ========== -->
+<div id="modal-modifier-matiere" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-800">Modifier la matière</h2>
+      </div>
+      <button onclick="closeModal('modal-modifier-matiere')" class="text-slate-400 hover:text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" id="form-modifier-matiere">
+      {% csrf_token %}
+      <div class="p-6 space-y-5">
+        <input type="hidden" name="matiere_id" id="modif_matiere_id">
+        <div class="space-y-2">
+          <label class="form-label font-semibold">Nom de la matière <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <input type="text" name="name" id="modif_matiere_name" class="form-input w-full pl-9" required>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label class="form-label text-slate-700">Description courte</label>
+          <div class="relative">
+            <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <textarea name="description" id="modif_matiere_desc" rows="3" class="form-textarea w-full pl-9"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 p-6 pt-0 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+        <button type="button" onclick="closeModal('modal-modifier-matiere')" class="btn btn-ghost">Annuler</button>
+        <button type="submit" class="btn btn-primary relative" id="btn-modifier-matiere">
+          <span class="btn-text">Enregistrer</span>
+          <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-teal-600 rounded-lg">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========== MODAL SUPPRIMER MATIÈRE ========== -->
+<div id="modal-supprimer-matiere" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <h2 class="text-xl font-semibold text-slate-800">Confirmer la suppression</h2>
+      </div>
+      <button onclick="closeModal('modal-supprimer-matiere')" class="text-slate-400 hover:text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="p-6">
+      <p class="text-slate-600">Êtes-vous sûr de vouloir supprimer la matière <strong id="suppr_matiere_nom"></strong> ?</p>
+      <p class="text-sm text-red-500 mt-2">⚠️ Cette action est irréversible.</p>
+    </div>
+    <form method="post" id="form-supprimer-matiere" class="border-t border-slate-200 bg-slate-50 rounded-b-2xl p-6 flex justify-end gap-3">
+      {% csrf_token %}
+      <button type="button" onclick="closeModal('modal-supprimer-matiere')" class="btn btn-ghost">Annuler</button>
+      <button type="submit" class="btn btn-danger relative" id="btn-supprimer-matiere">
+        <span class="btn-text">Supprimer</span>
+        <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-red-600 rounded-lg">
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  let searchTimeout;
+  let currentPage = 1;
+  let currentSearch = '';
+  let isLoading = false;
+
+  // Récupération des éléments
+  const searchInput = document.getElementById('search-input');
+  const tableBody = document.getElementById('table-body');
+  const paginationContainer = document.getElementById('pagination-container');
+  const globalLoader = document.getElementById('global-loader');
+
+  // Fonction de chargement des données
+  function loadMatieres() {
+    if (isLoading) return;
+    isLoading = true;
+    
+    if (globalLoader) globalLoader.classList.remove('hidden');
+    
+    const url = `${window.location.pathname}?page=${currentPage}&search=${encodeURIComponent(currentSearch)}`;
+    
+    fetch(url, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.rows_html && tableBody) {
+        tableBody.innerHTML = data.rows_html;
+      }
+      if (data.pagination_html && paginationContainer) {
+        paginationContainer.innerHTML = data.pagination_html;
+      }
+      if (globalLoader) globalLoader.classList.add('hidden');
+      isLoading = false;
+    })
+    .catch(error => {
+      console.error('Erreur:', error);
+      if (globalLoader) globalLoader.classList.add('hidden');
+      isLoading = false;
+    });
+  }
+
+  // Recherche en temps réel
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentSearch = this.value;
+        currentPage = 1;
+        loadMatieres();
+      }, 300);
+    });
+  }
+
+  // Fonction de changement de page
+  function goToPage(page) {
+    if (page === currentPage) return;
+    currentPage = page;
+    loadMatieres();
+  }
+
+  // Fonctions des modales
+  function openMatiereModal() {
+    document.getElementById('modal-ajouter-matiere').classList.remove('hidden');
+  }
+  
+  function openModifierMatiereModal(id, name, desc) {
+    document.getElementById('modif_matiere_id').value = id;
+    document.getElementById('modif_matiere_name').value = name;
+    document.getElementById('modif_matiere_desc').value = desc || '';
+    document.getElementById('form-modifier-matiere').action = `/centre/matieres/${id}/modifier/`;
+    document.getElementById('modal-modifier-matiere').classList.remove('hidden');
+  }
+  
+  function openSupprimerMatiereModal(id, name) {
+    document.getElementById('suppr_matiere_nom').textContent = name;
+    document.getElementById('form-supprimer-matiere').action = `/centre/matieres/${id}/supprimer/`;
+    document.getElementById('modal-supprimer-matiere').classList.remove('hidden');
+  }
+  
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    // Réinitialiser le formulaire
+    const form = document.querySelector(`#${modalId} form`);
+    if (form) {
+      form.reset();
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) {
+        const btnText = btn.querySelector('.btn-text');
+        const btnLoader = btn.querySelector('.btn-loader');
+        if (btnText && btnLoader) {
+          btnText.classList.remove('invisible');
+          btnLoader.classList.add('hidden');
+          btn.disabled = false;
+        }
+      }
+    }
+  }
+  
+  // Gestion des formulaires avec loader
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      const btn = this.querySelector('button[type="submit"]');
+      if (btn) {
+        const btnText = btn.querySelector('.btn-text');
+        const btnLoader = btn.querySelector('.btn-loader');
+        if (btnText && btnLoader) {
+          btnText.classList.add('invisible');
+          btnLoader.classList.remove('hidden');
+          btn.disabled = true;
+        }
+      }
+    });
+  });
+  
+  // Auto-hide alerts après soumission réussie
+  function showMessage(message, type) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} mb-4 rounded-xl alert-auto-hide`;
+    alertDiv.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
+        ${type === 'success' ? '<path d="M20 6 9 17l-5-5"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>'}
+      </svg>
+      <div>${message}</div>
+    `;
+    container.prepend(alertDiv);
+    
+    setTimeout(() => {
+      alertDiv.style.opacity = '0';
+      alertDiv.style.transform = 'translateY(-10px)';
+      setTimeout(() => alertDiv.remove(), 500);
+    }, 5000);
+  }
+  
+  // Auto-hide des messages existants
+  document.querySelectorAll('.alert-auto-hide').forEach(alert => {
+    setTimeout(() => {
+      if (alert) {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-10px)';
+        setTimeout(() => alert.remove(), 500);
+      }
+    }, 5000);
+  });
+</script>
+
+<style>
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeInUp 0.4s ease-out forwards; }
+  .alert-auto-hide { transition: opacity 0.5s ease, transform 0.5s ease; }
+  
+  /* Style pour la pagination */
+  .pagination {
+    @apply flex justify-center items-center gap-2;
+  }
+  .pagination a, .pagination span {
+    @apply px-3 py-1.5 rounded-lg text-sm transition-all duration-200;
+  }
+  .pagination a {
+    @apply text-slate-600 hover:bg-slate-200;
+  }
+  .pagination .current {
+    @apply bg-teal-500 text-white;
+  }
+  .pagination .disabled {
+    @apply text-slate-300 cursor-not-allowed;
+  }
+</style>
+{% endblock %}

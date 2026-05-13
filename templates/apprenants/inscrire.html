@@ -5,90 +5,141 @@
 {% block page_title %}Inscrire un apprenant{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-6">
+<div class="max-w-3xl mx-auto py-8">
 
-  <div class="card">
-    <div class="card-header">
-      <div class="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <h2 class="card-title">Inscription d'un apprenant</h2>
+  <!-- En-tête -->
+  <div class="relative mb-8">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl"></div>
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-800">Inscrire un apprenant</h1>
+        <p class="text-sm text-slate-500 mt-1">Enregistrez un nouvel apprenant pour l'année académique en cours</p>
       </div>
     </div>
-    <div class="card-body">
+  </div>
+
+  <div class="card shadow-xl border-0 overflow-hidden">
+    <div class="card-header bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-200">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <h2 class="card-title text-lg">Formulaire d'inscription</h2>
+      </div>
+    </div>
+    <div class="card-body p-6 md:p-8">
       
-      <div class="alert alert-info mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-        <div>Année académique : <strong>{{ annee_active.libelle }}</strong></div>
+      <div class="alert alert-info mb-6 rounded-xl border-l-4 border-teal-500 bg-teal-50/50">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5 text-teal-600"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        <div>Année académique : <strong class="font-semibold">{{ annee_active.libelle }}</strong></div>
       </div>
       
-      <form method="post">
+      <form method="post" id="form-inscription">
         {% csrf_token %}
         
-        <div class="grid grid-cols-1 gap-5">
+        <div class="space-y-6">
           
           <!-- Sélection de l'apprenant -->
-          <div class="form-group">
-            <label class="form-label form-label-required">Apprenant</label>
-            <select name="user_id" class="form-select" required>
-              <option value="">-- Sélectionner un apprenant --</option>
-              {% for user in apprenants_sans_inscription %}
-                <option value="{{ user.id }}" {% if form_data.user_id == user.id|stringformat:"s" %}selected{% endif %}>
-                  {{ user.get_full_name }} - {{ user.email }}
-                </option>
-              {% endfor %}
-            </select>
+          <div class="space-y-2">
+            <label class="form-label font-semibold text-slate-700">
+              Apprenant <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <select name="user_id" class="form-select w-full pl-9 appearance-none" required>
+                <option value="">-- Sélectionner un apprenant --</option>
+                {% for user in apprenants_sans_inscription %}
+                  <option value="{{ user.id }}" {% if form_data.user_id == user.id|stringformat:"s" %}selected{% endif %}>
+                    {{ user.get_full_name }} - {{ user.email }}
+                  </option>
+                {% endfor %}
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
             {% if not apprenants_sans_inscription %}
-              <p class="text-sm text-amber-600 mt-2">
-                ⚠️ Tous les apprenants sont déjà inscrits pour cette année.
-                <a href="{% url 'gestion_comptes' %}" class="text-teal-600 hover:underline">Créer un nouveau compte apprenant</a>
-              </p>
+              <div class="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-3 mt-2">
+                <p class="text-sm text-amber-700">
+                  ⚠️ Tous les apprenants sont déjà inscrits pour cette année.
+                  <a href="{% url 'gestion_comptes' %}" class="text-teal-600 hover:underline font-medium">Créer un nouveau compte apprenant</a>
+                </p>
+              </div>
             {% endif %}
           </div>
           
           <!-- Sélection du niveau -->
-          <div class="form-group">
-            <label class="form-label form-label-required">Niveau / Classe</label>
-            <select name="classe" id="classe-select" class="form-select" required>
-              <option value="">-- Sélectionner un niveau --</option>
-              {% for classe in classes %}
-                <option value="{{ classe.id }}" 
-                        data-frais="{{ classe.frais_inscription }}"
-                        {% if form_data.classe == classe.id|stringformat:"s" %}selected{% endif %}>
-                  {{ classe.name }}
-                </option>
-              {% endfor %}
-            </select>
+          <div class="space-y-2">
+            <label class="form-label font-semibold text-slate-700">
+              Niveau / Classe <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+              </div>
+              <select name="classe" id="classe-select" class="form-select w-full pl-9 appearance-none" required>
+                <option value="">-- Sélectionner un niveau --</option>
+                {% for classe in classes %}
+                  <option value="{{ classe.id }}" 
+                          data-frais="{{ classe.frais_inscription }}"
+                          data-mensuel="{{ classe.frais_mensuel }}"
+                          data-trimestriel="{{ classe.frais_trimestriel }}"
+                          data-annuel="{{ classe.frais_annuel }}"
+                          {% if form_data.classe == classe.id|stringformat:"s" %}selected{% endif %}>
+                    {{ classe.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
           </div>
           
-          <!-- Affichage automatique des frais d'inscription -->
-          <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
-            <div class="flex justify-between items-center">
-              <span class="font-semibold text-slate-700">Frais d'inscription :</span>
-              <span id="frais-inscription" class="text-xl font-bold text-teal-600">0 FCFA</span>
+          <!-- Carte des frais d'inscription -->
+          <div class="bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200 p-5">
+            <div class="flex justify-between items-center mb-3">
+              <span class="font-semibold text-slate-700">Frais d'inscription</span>
+              <span id="frais-inscription" class="text-2xl font-bold text-teal-600">0 FCFA</span>
             </div>
-            <div class="mt-3 flex items-center gap-3">
-              <input type="checkbox" name="frais_inscription_paye" id="frais_paye" class="w-4 h-4 text-teal-600 rounded">
-              <label for="frais_paye" class="text-sm text-slate-600"> Les frais d'inscription ont été payés (espèces)</label>
+            <div class="flex items-center gap-3 pt-3 border-t border-slate-200">
+              <input type="checkbox" name="frais_inscription_paye" id="frais_paye" class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+              <label for="frais_paye" class="text-sm text-slate-600 cursor-pointer">
+                <span class="font-medium">✓ Les frais d'inscription ont été payés</span> (espèces)
+              </label>
             </div>
           </div>
           
           <!-- Mode de paiement -->
-          <div class="form-group">
-            <label class="form-label form-label-required">Mode de paiement des frais mensuels</label>
-            <select name="mode_paiement" class="form-select">
-              <option value="MENSUEL" {% if form_data.mode_paiement == 'MENSUEL' %}selected{% endif %}>Mensuel</option>
-              <option value="TRIMESTRIEL" {% if form_data.mode_paiement == 'TRIMESTRIEL' %}selected{% endif %}>Trimestriel</option>
-              <option value="ANNUEL" {% if form_data.mode_paiement == 'ANNUEL' %}selected{% endif %}>Annuel</option>
-            </select>
+          <div class="space-y-2">
+            <label class="form-label font-semibold text-slate-700">
+              Mode de paiement des frais pédagogiques <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <select name="mode_paiement" class="form-select w-full pl-9 appearance-none">
+                <option value="MENSUEL" {% if form_data.mode_paiement == 'MENSUEL' %}selected{% endif %}>📅 Mensuel</option>
+                <option value="TRIMESTRIEL" {% if form_data.mode_paiement == 'TRIMESTRIEL' %}selected{% endif %}>📆 Trimestriel</option>
+                <option value="ANNUEL" {% if form_data.mode_paiement == 'ANNUEL' %}selected{% endif %}>📅 Annuel</option>
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Ce mode déterminera le montant et la fréquence des paiements à effectuer</p>
           </div>
           
         </div>
         
-        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
-          <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost">Annuler</a>
-          <button type="submit" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            Valider l'inscription
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
+          <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            Annuler
+          </a>
+          <button type="submit" class="btn btn-primary relative" id="btn-submit">
+            <span class="btn-text">Valider l'inscription</span>
+            <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-teal-600 rounded-lg">
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </span>
           </button>
         </div>
       </form>
@@ -108,7 +159,24 @@
     fraisSpan.textContent = parseInt(frais).toLocaleString() + ' FCFA';
   }
   
-  classeSelect.addEventListener('change', updateFrais);
-  updateFrais();
+  if (classeSelect) {
+    classeSelect.addEventListener('change', updateFrais);
+    updateFrais();
+  }
+  
+  // Gestion du loader
+  const form = document.getElementById('form-inscription');
+  if (form) {
+    form.addEventListener('submit', function() {
+      const btn = document.getElementById('btn-submit');
+      const btnText = btn.querySelector('.btn-text');
+      const btnLoader = btn.querySelector('.btn-loader');
+      if (btnText && btnLoader) {
+        btnText.classList.add('invisible');
+        btnLoader.classList.remove('hidden');
+        btn.disabled = true;
+      }
+    });
+  }
 </script>
 {% endblock %}

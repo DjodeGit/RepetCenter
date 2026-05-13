@@ -1,0 +1,35 @@
+{% for matiere in page_obj %}
+  <tr class="hover:bg-slate-50 transition-colors duration-200">
+    <td class="px-6 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <span class="font-semibold text-slate-800">{{ matiere.name }}</span>
+      </div>
+    </td>
+    <td class="px-6 py-4 text-slate-500 text-sm">{{ matiere.description|default:"—" }}</td>
+    <td class="px-4 py-4 text-right">
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="openModifierMatiereModal({{ matiere.id }}, '{{ matiere.name|escapejs }}', '{{ matiere.description|default:''|escapejs }}')"
+                class="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </button>
+        <button onclick="openSupprimerMatiereModal({{ matiere.id }}, '{{ matiere.name|escapejs }}')"
+                class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        </button>
+      </div>
+    </td>
+  </td>
+{% empty %}
+  <tr>
+    <td colspan="3" class="px-6 py-16 text-center">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <p class="text-slate-500 font-medium">Aucune matière trouvée</p>
+      <p class="text-sm text-slate-400 mt-1">Essayez de modifier votre recherche ou cliquez sur "Nouvelle matière"</p>
+    </td>
+  </tr>
+{% endfor %}

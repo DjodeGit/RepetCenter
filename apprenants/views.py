@@ -158,7 +158,7 @@ def inscrire_apprenant(request):
             niveau=classe,
             mode_paiement=mode_paiement,
             frais_inscription_paye=frais_inscription_paye,
-            date_paiement_inscription=timezone.now().date() if frais_inscription_paye else None,
+            date_paiement_inscription=timezone-now().date() if frais_inscription_paye else None,
             statut='ACTIF'
         )
         

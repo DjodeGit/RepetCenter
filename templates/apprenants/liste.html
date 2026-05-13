@@ -5,113 +5,144 @@
 {% block page_title %}Liste des apprenants{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto py-6">
+<div class="max-w-7xl mx-auto py-8">
 
-  <div class="flex justify-between items-center mb-6">
-    <div>
-      <h1 class="page-title">Apprenants</h1>
-      <p class="page-description">
-        {% if annee_active %}Année {{ annee_active.libelle }} - {% endif %}
-        {{ total_inscriptions }} inscrit{{ total_inscriptions|pluralize }},
-        {{ total_actifs }} actif{{ total_actifs|pluralize }}
-      </p>
+  <!-- En-tête -->
+  <div class="relative mb-8">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl"></div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h1 class="page-title text-2xl md:text-3xl font-serif font-bold text-slate-800">Apprenants</h1>
+        </div>
+        <p class="page-description text-base mt-2">
+          {% if annee_active %}Année <strong class="font-semibold">{{ annee_active.libelle }}</strong> - {% endif %}
+          <span class="text-teal-600 font-semibold">{{ total_inscriptions }}</span> inscrit{{ total_inscriptions|pluralize }},
+          <span class="text-green-600 font-semibold">{{ total_actifs }}</span> actif{{ total_actifs|pluralize }}
+        </p>
+      </div>
+      <a href="{% url 'apprenants:inscrire' %}" class="btn btn-primary shadow-md hover:shadow-lg transition-all duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        Inscrire un apprenant
+      </a>
     </div>
-    <a href="{% url 'apprenants:inscrire' %}" class="btn btn-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-      Inscrire un apprenant
-    </a>
   </div>
 
   <!-- Filtres -->
-  <form method="get" class="flex flex-wrap gap-3 mb-6 items-center">
-    <div class="relative flex-1 min-w-[200px]">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+    <form method="get" class="flex flex-wrap items-center gap-3">
+      <div class="relative flex-1 min-w-[220px]">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+        </div>
+        <input type="text" name="q" value="{{ q }}" class="form-input w-full pl-9" placeholder="Rechercher par nom, prénom, email, matricule...">
       </div>
-      <input type="text" name="q" value="{{ q }}" class="form-input pl-8" placeholder="Rechercher par nom, email, matricule...">
-    </div>
-    <select name="classe" class="form-select w-44">
-      <option value="">Tous les niveaux</option>
-      {% for classe in classes %}
-        <option value="{{ classe.id }}" {% if classe_filtre == classe.id|stringformat:"s" %}selected{% endif %}>
-          {{ classe.name }}
-        </option>
-      {% endfor %}
-    </select>
-    <select name="statut" class="form-select w-40">
-      <option value="">Tous statuts</option>
-      {% for val, label in statuts %}
-        <option value="{{ val }}" {% if statut_filtre == val %}selected{% endif %}>
-          {{ label }}
-        </option>
-      {% endfor %}
-    </select>
-    <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
-    <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost btn-sm">Réinitialiser</a>
-  </form>
+      <div class="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+        <select name="classe" class="pl-9 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-white focus:outline-hidden focus:border-teal-400 w-44">
+          <option value="">Tous les niveaux</option>
+          {% for classe in classes %}
+            <option value="{{ classe.id }}" {% if classe_filtre == classe.id|stringformat:"s" %}selected{% endif %}>
+              {{ classe.name }}
+            </option>
+          {% endfor %}
+        </select>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        <select name="statut" class="pl-9 pr-8 py-2.5 border border-slate-200 rounded-lg text-sm appearance-none bg-white focus:outline-hidden focus:border-teal-400 w-40">
+          <option value="">Tous statuts</option>
+          {% for val, label in statuts %}
+            <option value="{{ val }}" {% if statut_filtre == val %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Filtrer</button>
+      <a href="{% url 'apprenants:liste' %}" class="btn btn-ghost btn-sm">Réinitialiser</a>
+    </form>
+  </div>
 
   <!-- Tableau -->
-  <div class="table-wrapper">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Matricule</th>
-          <th>Apprenant</th>
-          <th>Niveau</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for inscription in inscriptions %}
-        <tr>
-          <td class="whitespace-nowrap font-mono text-xs">{{ inscription.apprenant.matricule }}</td>
-          <td class="whitespace-nowrap">
-            <div class="flex items-center gap-2">
-              <div class="avatar avatar-sm avatar-teal">
-                {{ inscription.apprenant.user.first_name|first|upper }}{{ inscription.apprenant.user.last_name|first|upper }}
-              </div>
-              <div>
-                <div class="font-semibold text-sm">{{ inscription.apprenant.user.get_full_name }}</div>
-                <div class="text-xs text-slate-400">{{ inscription.apprenant.user.email }}</div>
-              </div>
-            </div>
-           </div>
-          </div>
-          </div>
-          </td>
-          <td class="whitespace-nowrap">
-            <span class="badge badge-teal">{{ inscription.niveau.name }}</span>
-          </div>
-          </div>
-          </td>
-          <td class="whitespace-nowrap">
-            <span class="badge {% if inscription.statut == 'ACTIF' %}badge-green{% elif inscription.statut == 'SUSPENDU' %}badge-amber{% elif inscription.statut == 'SORTI' %}badge-red{% else %}badge-gray{% endif %}">
-              {{ inscription.get_statut_display }}
-            </span>
-          </div>
-          </div>
-          </td>
-          <td class="whitespace-nowrap">
-            <a href="{% url 'fiche_apprenant' inscription.id %}" class="btn btn-ghost btn-xs">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              Voir
-            </a>
-          </div>
-          </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="5" class="text-center py-12 text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-300"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Aucun apprenant trouvé.
-            <a href="{% url 'apprenants:inscrire' %}" class="text-teal-600 hover:underline block mt-2">Inscrire le premier apprenant</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Matricule</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Apprenant</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Niveau</th>
+            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
+            <th class="px-4 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for inscription in inscriptions %}
+            <tr class="hover:bg-slate-50 transition-colors duration-200 {% if inscription.statut == 'SUSPENDU' %}opacity-75{% endif %}">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="font-mono text-xs font-semibold text-slate-500">{{ inscription.apprenant.matricule }}</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm
+                    {% if inscription.statut == 'ACTIF' %}bg-gradient-to-br from-teal-500 to-teal-600
+                    {% elif inscription.statut == 'SUSPENDU' %}bg-gradient-to-br from-amber-500 to-amber-600
+                    {% else %}bg-gradient-to-br from-slate-500 to-slate-600{% endif %}">
+                    {{ inscription.apprenant.user.first_name|first|upper }}{{ inscription.apprenant.user.last_name|first|upper }}
+                  </div>
+                  <div>
+                    <div class="font-semibold text-sm text-slate-800">{{ inscription.apprenant.user.get_full_name }}</div>
+                    <div class="text-xs text-slate-400">{{ inscription.apprenant.user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="badge badge-teal">{{ inscription.niveau.name }}</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                  {% if inscription.statut == 'ACTIF' %}bg-green-100 text-green-700
+                  {% elif inscription.statut == 'SUSPENDU' %}bg-amber-100 text-amber-700
+                  {% elif inscription.statut == 'SORTI' %}bg-red-100 text-red-700
+                  {% else %}bg-slate-100 text-slate-600{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    {% if inscription.statut == 'ACTIF' %}<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+                    {% elif inscription.statut == 'SUSPENDU' %}<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/>
+                    {% else %}<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/>{% endif %}
+                  </svg>
+                  {{ inscription.get_statut_display }}
+                </span>
+              </td>
+              <td class="px-4 py-4 whitespace-nowrap text-right">
+                <a href="{% url 'fiche_apprenant' inscription.id %}" class="btn btn-ghost btn-xs" title="Voir la fiche">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-16 text-center">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                </div>
+                <p class="text-slate-500 font-medium">Aucun apprenant trouvé</p>
+                <p class="text-sm text-slate-400 mt-1">Commencez par inscrire un apprenant</p>
+                <a href="{% url 'apprenants:inscrire' %}" class="inline-flex items-center gap-2 mt-4 text-sm text-teal-600 hover:text-teal-700 font-medium">
+                  Inscrire un apprenant
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
