@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Emplois du temps — Pentagone Academy{% endblock %}
+{% block page_title %}Emplois du temps{% endblock %}
+
+{% block content %}
+<div class="container-responsive animate-fade-in-up">
+    <div class="card mb-6">
+        <div class="card-body">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-group"><label class="label">Statut</label><select name="status" class="select"
+                        onchange="this.form.submit()">
+                        <option value="">Tous</option>{% for value, label in status_choices %}<option
+                            value="{{ value }}" {% if request.GET.status==value %}selected{% endif %}>{{ label }}
+                        </option>{% endfor %}
+                    </select></div>
+                <div class="form-group"><label class="label">Année scolaire</label><select name="annee" class="select"
+                        onchange="this.form.submit()">
+                        <option value="">Toutes</option>{% for annee in annees_scolaires %}<option value="{{ annee }}"
+                            {% if request.GET.annee==annee %}selected{% endif %}>{{ annee }}</option>{% endfor %}
+                    </select></div>
+                <div class="form-group flex items-end"><a href="{% url 'emploidutemps:emploi_liste' %}"
+                        class="btn btn-secondary w-full">Réinitialiser</a></div>
+            </form>
+        </div>
+    </div>
+    <div class="flex justify-end mb-6"><a href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary"><svg
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>Nouvel emploi du temps</a></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{% for emploi in page_obj %}<div
+            class="card card-hover">
+            <div class="flex justify-between items-start mb-4"><span
+                    class="badge {% if emploi.is_publie %}badge-success{% else %}badge-warning{% endif %}">{{
+                    emploi.get_status_display }}</span>
+                <div class="flex gap-1"><a href="{% url 'emploidutemps:emploi_detail' emploi.pk %}"
+                        class="btn btn-icon-sm" title="Voir"><svg xmlns="http://www.w3.org/2000/svg" width="14"
+                            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg></a><a href="{% url 'emploidutemps:emploi_modifier' emploi.pk %}" class="btn btn-icon-sm"
+                        title="Modifier"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        </svg></a></div>
+            </div>
+            <h3 class="text-lg font-bold text-brand-800 mb-2 font-display">{{ emploi.titre }}</h3>
+            <div class="space-y-2 text-sm text-neutral-600 mb-4">
+                <div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg><span>{{ emploi.date_debut|date:"d M Y" }} - {{ emploi.date_fin|date:"d M Y" }}</span></div>
+                <div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                    </svg><span>{{ emploi.annee_scolaire }}</span></div>
+            </div>
+            <div class="pt-3 border-t border-neutral-100 flex justify-between items-center text-xs text-neutral-400">
+                <span>Créé le {{ emploi.created_at|date:"d/m/Y" }}</span>{% if not emploi.is_publie %}<a
+                    href="{% url 'emploidutemps:emploi_publier' emploi.pk %}" class="text-brand-600 hover:underline"
+                    onclick="return confirm('Publier cet emploi du temps ?')">Publier</a>{% endif %}</div>
+        </div>{% empty %}<div class="col-span-full">
+            <div class="empty-state py-12">
+                <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg></div>
+                <p class="empty-state-title">Aucun emploi du temps</p>
+                <p class="empty-state-text">Créez votre premier emploi du temps</p><a
+                    href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary btn-sm mt-2">Nouvel emploi du
+                    temps</a>
+            </div>
+        </div>{% endfor %}</div>
+    {% if page_obj.has_other_pages %}<div class="flex justify-center mt-8">
+        <div class="pagination">{% if page_obj.has_previous %}<a
+                href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
+                class="page-btn">«</a><a
+                href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
+                class="page-btn">‹</a>{% endif %}<span class="page-btn page-btn-active">{{ page_obj.number }}</span>{%
+            if page_obj.has_next %}<a
+                href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
+                class="page-btn">›</a><a
+                href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
+                class="page-btn">»</a>{% endif %}</div>
+    </div>{% endif %}
+</div>
+{% endblock %}

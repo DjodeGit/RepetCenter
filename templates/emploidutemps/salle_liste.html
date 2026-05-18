@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Salles — Pentagone Academy{% endblock %}
+{% block page_title %}Gestion des salles{% endblock %}
+
+{% block content %}
+<div class="container-responsive animate-fade-in-up">
+
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="?est_active=true" class="btn btn-sm {% if filtre_actif == 'true' %}btn-primary{% else %}btn-secondary{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Actives
+      </a>
+      <a href="?est_active=false" class="btn btn-sm {% if filtre_actif == 'false' %}btn-primary{% else %}btn-secondary{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Inactives
+      </a>
+      <a href="{% url 'emploidutemps:salle_liste' %}" class="btn btn-sm btn-ghost">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+        Tout afficher
+      </a>
+    </div>
+    <a href="{% url 'emploidutemps:salle_creer' %}" class="btn btn-primary btn-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nouvelle salle
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {% for salle in page_obj %}
+      <div class="card card-hover group relative">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-600">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-brand-800">{{ salle.nom }}</h3>
+              <p class="text-xs text-neutral-400">{{ salle.code }}</p>
+            </div>
+          </div>
+          <span class="badge {% if salle.est_active %}badge-success{% else %}badge-danger{% endif %}">
+            {% if salle.est_active %}Active{% else %}Inactive{% endif %}
+          </span>
+        </div>
+        <div class="space-y-2 text-sm text-neutral-600 mb-4">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <span>Capacité : <strong>{{ salle.capacite }}</strong> places</span>
+          </div>
+          {% if salle.description %}
+            <div class="flex items-start gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3h18v18H3z"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+              </svg>
+              <span class="text-neutral-500 text-xs line-clamp-2">{{ salle.description }}</span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-neutral-100">
+          <a href="{% url 'emploidutemps:salle_modifier' salle.pk %}" class="btn btn-icon-sm" title="Modifier">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            </svg>
+          </a>
+          <button type="button" onclick="openDeleteModal({{ salle.pk }}, '{{ salle.nom|escapejs }}')" class="btn btn-icon-sm text-red-400 hover:bg-red-50" title="Supprimer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6 18.1 20a2 2 0 0 1-2 1.9H7.9a2 2 0 0 1-2-1.9L5 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-full">
+        <div class="empty-state py-12">
+          <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <p class="empty-state-title">Aucune salle</p>
+          <p class="empty-state-text">Créez votre première salle</p>
+          <a href="{% url 'emploidutemps:salle_creer' %}" class="btn btn-primary btn-sm mt-2">Nouvelle salle</a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8">
+      <div class="pagination">{% if page_obj.has_previous %}<a href="?page=1{% if filtre_actif %}&est_active={{ filtre_actif }}{% endif %}" class="page-btn">«</a><a href="?page={{ page_obj.previous_page_number }}{% if filtre_actif %}&est_active={{ filtre_actif }}{% endif %}" class="page-btn">‹</a>{% endif %}<span class="page-btn page-btn-active">{{ page_obj.number }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if filtre_actif %}&est_active={{ filtre_actif }}{% endif %}" class="page-btn">›</a><a href="?page={{ page_obj.paginator.num_pages }}{% if filtre_actif %}&est_active={{ filtre_actif }}{% endif %}" class="page-btn">»</a>{% endif %}</div>
+    </div>
+  {% endif %}
+</div>
+
+<div id="deleteModal" class="modal-overlay" style="display: none;">
+  <div class="modal modal-sm"><div class="modal-header"><h3 class="modal-title">Confirmer la suppression</h3><button type="button" onclick="closeDeleteModal()" class="modal-close"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="modal-body"><p>Êtes-vous sûr de vouloir supprimer la salle <strong id="salleNom"></strong> ?</p><p class="text-xs text-neutral-500 mt-2">Cette action est irréversible.</p></div><div class="modal-footer"><button type="button" onclick="closeDeleteModal()" class="btn btn-ghost btn-sm">Annuler</button><form id="deleteForm" method="post">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Supprimer</button></form></div></div>
+</div>
+<script>function openDeleteModal(id,nom){document.getElementById('salleNom').textContent=nom;document.getElementById('deleteForm').action="{% url 'emploidutemps:salle_supprimer' 0 %}".replace('0',id);document.getElementById('deleteModal').style.display='flex';}function closeDeleteModal(){document.getElementById('deleteModal').style.display='none';}document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDeleteModal();});</script>
+{% endblock %}
