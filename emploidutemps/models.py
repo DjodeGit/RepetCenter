@@ -1,10 +1,32 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from centre.models import Matiere, Classe, AnneeAcademique
 from enseignants.models import Enseignant
+
+
+class Salle(models.Model):
+    """
+    Salle de cours - Ajouté pour gérer les salles dans l'emploi du temps
+    """
+    
+    nom = models.CharField(max_length=100, unique=True, verbose_name="Nom de la salle")
+    code = models.CharField(max_length=20, unique=True, verbose_name="Code")
+    capacite = models.PositiveIntegerField(default=30, verbose_name="Capacité")
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+    est_active = models.BooleanField(default=True, verbose_name="Salle active")
+    
+    # Audit
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Salle"
+        verbose_name_plural = "Salles"
+        ordering = ['nom']
+    
+    def __str__(self):
+        return f"{self.nom} ({self.code})"
 
 
 class EmploiDuTemps(models.Model):
@@ -91,6 +113,14 @@ class Semaine(models.Model):
         ordering            = ['date_debut']
         unique_together     = ('emploi_du_temps', 'numero_semaine')
 
+    def clean(self):
+        if self.date_debut and self.date_fin and self.date_debut > self.date_fin:
+            raise ValidationError("La date de début doit être antérieure à la date de fin")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Semaine {self.numero_semaine} — {self.emploi_du_temps}"
 
@@ -167,6 +197,13 @@ class Seance(models.Model):
                   null=True, blank=True,
                   related_name='seances'
               )
+    salle = models.ForeignKey(
+                Salle,
+                on_delete=models.CASCADE,
+                related_name='seances',
+                verbose_name="Salle",
+                null=True, blank=True
+            )
     matiere = models.ForeignKey(
                   Matiere,
                   on_delete=models.CASCADE,
@@ -200,6 +237,35 @@ class Seance(models.Model):
         verbose_name        = "Séance"
         verbose_name_plural = "Séances"
         ordering            = ['jour', 'heure_debut']
+        # Contraintes d'unicité pour éviter les conflits
+        unique_together = [
+            ['jour', 'heure_debut', 'salle'],      # Une salle ne peut pas avoir 2 cours en même temps
+            ['jour', 'heure_debut', 'enseignant'], # Un enseignant ne peut pas avoir 2 cours en même temps
+            ['jour', 'heure_debut', 'classe'],     # Une classe ne peut pas avoir 2 cours en même temps
+        ]
+
+    def clean(self):
+        """Validation personnalisée"""
+        # Vérifier que l'heure de début est avant l'heure de fin
+        if self.heure_debut and self.heure_fin and self.heure_debut >= self.heure_fin:
+            raise ValidationError("L'heure de début doit être antérieure à l'heure de fin")
+        
+        # Vérifier que la salle existe et est active
+        if self.salle and not self.salle.est_active:
+            raise ValidationError(f"La salle {self.salle.nom} n'est pas active")
+        
+        # Vérifier la capacité de la salle par rapport à l'effectif de la classe
+        if self.salle and self.classe:
+            effectif_classe = self.classe.apprenants.count() if hasattr(self.classe, 'apprenants') else 0
+            if effectif_classe > self.salle.capacite:
+                raise ValidationError(
+                    f"La capacité de la salle ({self.salle.capacite}) est inférieure "
+                    f"à l'effectif de la classe ({effectif_classe})"
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.matiere} — {self.classe} — {self.jour} {self.heure_debut}"
