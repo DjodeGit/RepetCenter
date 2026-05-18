@@ -23,7 +23,8 @@ urlpatterns = [
     path('',       include('accounts.urls')),
     path("centre/", include("centre.urls", namespace="centre")),
     path("apprenants/", include("apprenants.urls", namespace="apprenants")),
-     path("enseignants/", include("enseignants.urls", namespace="enseignants")),
+    path("enseignants/", include("enseignants.urls", namespace="enseignants")),
+    path('emploi/', include('emploidutemps.urls', namespace='emploidutemps')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
