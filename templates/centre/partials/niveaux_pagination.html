@@ -1,30 +1,35 @@
 {% if page_obj.has_other_pages %}
-  <div class="pagination flex justify-center items-center gap-2 flex-wrap">
-    {% if page_obj.has_previous %}
-      <a href="#" onclick="goToPage({{ page_obj.previous_page_number }}); return false;" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-200 transition">
-        &laquo; Précédent
-      </a>
-    {% else %}
-      <span class="px-3 py-1.5 rounded-lg text-sm text-slate-300 cursor-not-allowed">&laquo; Précédent</span>
-    {% endif %}
-    
-    {% for num in page_obj.paginator.page_range %}
-      {% if page_obj.number == num %}
-        <span class="px-3 py-1.5 rounded-lg text-sm bg-teal-500 text-white">{{ num }}</span>
-      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-        <a href="#" onclick="goToPage({{ num }}); return false;" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-200 transition">{{ num }}</a>
-      {% endif %}
-    {% endfor %}
-    
-    {% if page_obj.has_next %}
-      <a href="#" onclick="goToPage({{ page_obj.next_page_number }}); return false;" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-200 transition">
-        Suivant &raquo;
-      </a>
-    {% else %}
-      <span class="px-3 py-1.5 rounded-lg text-sm text-slate-300 cursor-not-allowed">Suivant &raquo;</span>
-    {% endif %}
-  </div>
-  <div class="text-center text-xs text-slate-400 mt-3">
-    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
-  </div>
+<div class="px-6 py-4 border-t border-neutral-200 bg-neutral-50">
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn" title="Première page">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn" title="Page précédente">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-btn page-btn-active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn" title="Page suivante">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-btn" title="Dernière page">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            </a>
+        {% endif %}
+    </div>
+    <div class="text-center text-xs text-neutral-400 mt-3">
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} 
+        ({{ page_obj.paginator.count }} niveau{{ page_obj.paginator.count|pluralize }})
+    </div>
+</div>
 {% endif %}

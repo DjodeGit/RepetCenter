@@ -78,7 +78,7 @@ def matieres_liste(request):
             models.Q(description__icontains=search_query)
         )
     
-    # Pagination : 10 éléments par page
+    # Pagination : 5 éléments par page
     paginator = Paginator(matieres, 5)
     page = request.GET.get('page', 1)
     
@@ -91,15 +91,21 @@ def matieres_liste(request):
     
     # Si c'est une requête AJAX, on retourne uniquement le HTML des lignes et de la pagination
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        rows_html = render_to_string('centre/partials/matieres_table_rows.html', {'page_obj': page_obj})
-        pagination_html = render_to_string('centre/partials/matieres_pagination.html', {'page_obj': page_obj})
+        rows_html = render_to_string('centre/partials/matieres_table_rows.html', {
+            'matieres': page_obj,
+            'search_query': search_query,
+        })
+        pagination_html = render_to_string('centre/partials/matieres_pagination.html', {
+            'page_obj': page_obj,
+            'search_query': search_query,
+        })
         return JsonResponse({
             'rows_html': rows_html,
             'pagination_html': pagination_html,
         })
     
     context = {
-        'page_obj': page_obj,
+        'matieres': page_obj,  # Ici page_obj est passé comme 'matieres'
         'centre': centre,
         'search_query': search_query,
         'page_title': 'Gestion des matières',
@@ -344,3 +350,4 @@ def configurer_periodes(request, annee_id=None):
                       'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
     }
     return render(request, 'centre/configurer_periodes.html', context)
+

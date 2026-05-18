@@ -13,7 +13,8 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.cache import cache
 from accounts.utils.email_utils import generate_verification_code, send_verification_code_email
-
+from enseignants.models import Enseignant
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 User = get_user_model()
 
 
@@ -201,6 +202,121 @@ def change_password_final(request):
         return redirect('profile')
     
     return redirect('profile')
+
+from django.http import JsonResponse
+
+def send_reset_code_ajax(request):
+    """Version AJAX de l'envoi du code"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        
+        if not email:
+            return JsonResponse({'success': False, 'message': 'Veuillez saisir votre adresse email.'})
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Générer un code à 6 chiffres
+            code = ''.join(random.choices(string.digits, k=6))
+            
+            # Stocker en session
+            request.session['reset_email'] = email
+            request.session['reset_code'] = code
+            request.session['reset_code_expiry'] = (timezone.now() + timezone.timedelta(minutes=10)).isoformat()
+            
+            # Envoyer l'email
+            site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+            context = {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'code': code,
+                'site_url': site_url,
+            }
+            
+            html_message = render_to_string('emails/reset_code_email.html', context)
+            
+            send_mail(
+                subject='Pentagone Academy - Code de réinitialisation',
+                message=strip_tags(html_message),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            return JsonResponse({'success': True, 'message': f'Un code a été envoyé à {email}'})
+            
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Aucun compte trouvé avec l\'adresse {email}'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def verify_reset_code_ajax(request):
+    """Version AJAX de la vérification du code"""
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        stored_code = request.session.get('reset_code')
+        expiry = request.session.get('reset_code_expiry')
+        
+        if expiry:
+            from datetime import datetime
+            if datetime.fromisoformat(expiry) < timezone.now():
+                request.session.pop('reset_email', None)
+                request.session.pop('reset_code', None)
+                request.session.pop('reset_code_expiry', None)
+                return JsonResponse({'success': False, 'message': 'Le code a expiré. Veuillez recommencer.'})
+        
+        if stored_code and stored_code == code:
+            request.session['reset_verified'] = True
+            return JsonResponse({'success': True, 'message': 'Code validé. Vous pouvez maintenant créer votre nouveau mot de passe.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Code de validation incorrect.'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def create_new_password_ajax(request):
+    """Version AJAX de la création du nouveau mot de passe"""
+    if request.method == 'POST':
+        if not request.session.get('reset_verified', False):
+            return JsonResponse({'success': False, 'message': 'Session invalide. Veuillez recommencer.'})
+        
+        email = request.session.get('reset_email')
+        if not email:
+            return JsonResponse({'success': False, 'message': 'Session expirée. Veuillez recommencer.'})
+        
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if len(new_password) < 8:
+            return JsonResponse({'success': False, 'message': 'Le mot de passe doit contenir au moins 8 caractères.'})
+        
+        if new_password != confirm_password:
+            return JsonResponse({'success': False, 'message': 'Les mots de passe ne correspondent pas.'})
+        
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+            
+            # Nettoyer la session
+            request.session.pop('reset_email', None)
+            request.session.pop('reset_code', None)
+            request.session.pop('reset_code_expiry', None)
+            request.session.pop('reset_verified', None)
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Votre mot de passe a été modifié avec succès.',
+                'redirect_url': '/login/'
+            })
+            
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Une erreur est survenue. Veuillez recommencer.'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
 # ==================== AUTHENTIFICATION ====================
 
 def login_view(request):
@@ -353,7 +469,15 @@ def gestion_comptes(request):
 
     total_actifs = User.objects.filter(is_active=True).count()
     total_inactifs = User.objects.filter(is_active=False).count()
-
+    paginator = Paginator(utilisateurs, 10)
+    page = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    
     return render(request, 'accounts/gestion_comptes.html', {
         'utilisateurs': utilisateurs,
         'role_filtre': role,
@@ -362,12 +486,15 @@ def gestion_comptes(request):
         'total_actifs': total_actifs,
         'total_inactifs': total_inactifs,
         'roles': User.Role.choices,
+        'utilisateurs': page_obj,  # Note: maintenant c'est page_obj, pas utilisateurs
+        'page_obj': page_obj,      # Pour la pagination
+        
     })
 
 
 @admin_required
 def creer_compte(request):
-    """Création d'un compte avec génération auto du mot de passe et envoi par email"""
+    """Création d'un compte avec génération auto du mot de passe, envoi par email et création du profil selon le rôle"""
     if request.method == 'POST':
         first_name = request.POST.get('first_name', '').strip()
         last_name = request.POST.get('last_name', '').strip()
@@ -390,6 +517,7 @@ def creer_compte(request):
 
         temp_password = generate_random_password()
 
+        # 1. Création du compte utilisateur
         user = User.objects.create_user(
             email=email,
             password=temp_password,
@@ -399,12 +527,45 @@ def creer_compte(request):
             is_active=True,
         )
 
+        
+        if role == 'ENSEIGNANT':
+            from enseignants.models import Enseignant
+            Enseignant.objects.create(
+                user=user,
+               
+                statut='INCOMPLET'  # Profil incomplet, à compléter
+            )
+        elif role == 'APPRENANT':
+            from apprenants.models import Apprenant
+            import uuid
+            matricule = f"REP-2025-{str(uuid.uuid4().hex[:6]).upper()}"
+            Apprenant.objects.create(
+                user=user,
+                matricule=matricule,
+                statut='ACTIF'
+            )
+        # Pour ADMIN, pas de profil spécifique
+
+        # 3. Envoi de l'email
         success, message = send_credentials_email(user, temp_password, request)
 
-        if success:
-            messages.success(request, f"Compte créé pour {user.get_full_name()}. Un email a été envoyé à {email}")
+        # 4. Messages et redirection selon le rôle
+        if role == 'ENSEIGNANT':
+            from enseignants.models import Enseignant
+            enseignant = Enseignant.objects.get(user=user)
+            # Stocker l'ID en session pour la redirection
+            messages.info(request, f"Compte enseignant créé. Veuillez maintenant compléter son profil (matières, niveaux, etc.)")
+            return redirect('enseignants:completer_profil', pk=enseignant.pk)
+        elif role == 'APPRENANT':
+            if success:
+                messages.success(request, f"Compte apprenant créé pour {user.get_full_name()}. Un email a été envoyé à {email}")
+            else:
+                messages.warning(request, f"Compte apprenant créé mais email non envoyé. Mot de passe : {temp_password}")
         else:
-            messages.warning(request, f"Compte créé mais email non envoyé. Mot de passe : {temp_password}")
+            if success:
+                messages.success(request, f"Compte administrateur créé pour {user.get_full_name()}. Un email a été envoyé à {email}")
+            else:
+                messages.warning(request, f"Compte administrateur créé mais email non envoyé. Mot de passe : {temp_password}")
 
         return redirect('gestion_comptes')
 
@@ -468,32 +629,124 @@ def detail_compte(request, user_id):
 
 # ==================== MOT DE PASSE OUBLIE ====================
 
+# ==================== MOT DE PASSE OUBLIÉ (PROCESSUS COMPLET) ====================
+
 def forgot_password(request):
+    """Étape 1: Formulaire pour demander l'email"""
+    return render(request, 'accounts/forgot_password.html')
+
+
+from django.http import JsonResponse
+
+def send_reset_code_ajax(request):
+    """Version AJAX de l'envoi du code"""
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         
         if not email:
-            messages.error(request, "Veuillez saisir votre adresse email.")
-            return render(request, 'accounts/login.html', {'mode': 'forgot'})
+            return JsonResponse({'success': False, 'message': 'Veuillez saisir votre adresse email.'})
         
         try:
             user = User.objects.get(email=email)
             
-            new_password = generate_random_password()
+            # Générer un code à 6 chiffres
+            code = ''.join(random.choices(string.digits, k=6))
+            
+            # Stocker en session
+            request.session['reset_email'] = email
+            request.session['reset_code'] = code
+            request.session['reset_code_expiry'] = (timezone.now() + timezone.timedelta(minutes=10)).isoformat()
+            
+            # Envoyer l'email
+            site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+            context = {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'code': code,
+                'site_url': site_url,
+            }
+            
+            html_message = render_to_string('emails/reset_code_email.html', context)
+            
+            send_mail(
+                subject='Pentagone Academy - Code de réinitialisation',
+                message=strip_tags(html_message),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            
+            return JsonResponse({'success': True, 'message': f'Un code a été envoyé à {email}'})
+            
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Aucun compte trouvé avec l\'adresse {email}'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def verify_reset_code_ajax(request):
+    """Version AJAX de la vérification du code"""
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        stored_code = request.session.get('reset_code')
+        expiry = request.session.get('reset_code_expiry')
+        
+        if expiry:
+            from datetime import datetime
+            if datetime.fromisoformat(expiry) < timezone.now():
+                request.session.pop('reset_email', None)
+                request.session.pop('reset_code', None)
+                request.session.pop('reset_code_expiry', None)
+                return JsonResponse({'success': False, 'message': 'Le code a expiré. Veuillez recommencer.'})
+        
+        if stored_code and stored_code == code:
+            request.session['reset_verified'] = True
+            return JsonResponse({'success': True, 'message': 'Code validé. Vous pouvez maintenant créer votre nouveau mot de passe.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Code de validation incorrect.'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def create_new_password_ajax(request):
+    """Version AJAX de la création du nouveau mot de passe"""
+    if request.method == 'POST':
+        if not request.session.get('reset_verified', False):
+            return JsonResponse({'success': False, 'message': 'Session invalide. Veuillez recommencer.'})
+        
+        email = request.session.get('reset_email')
+        if not email:
+            return JsonResponse({'success': False, 'message': 'Session expirée. Veuillez recommencer.'})
+        
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if len(new_password) < 8:
+            return JsonResponse({'success': False, 'message': 'Le mot de passe doit contenir au moins 8 caractères.'})
+        
+        if new_password != confirm_password:
+            return JsonResponse({'success': False, 'message': 'Les mots de passe ne correspondent pas.'})
+        
+        try:
+            user = User.objects.get(email=email)
             user.set_password(new_password)
             user.save()
             
-            success, message = send_password_reset_email(user, new_password, request)
+            # Nettoyer la session
+            request.session.pop('reset_email', None)
+            request.session.pop('reset_code', None)
+            request.session.pop('reset_code_expiry', None)
+            request.session.pop('reset_verified', None)
             
-            if success:
-                messages.success(request, f"Un nouveau mot de passe a été envoyé à {email}")
-            else:
-                messages.warning(request, f"Erreur d'envoi : {message}")
-            
-            return redirect('login')
+            return JsonResponse({
+                'success': True, 
+                'message': 'Votre mot de passe a été modifié avec succès.',
+                'redirect_url': '/login/'
+            })
             
         except User.DoesNotExist:
-            messages.error(request, f"Aucun compte trouvé avec l'adresse {email}")
-            return render(request, 'accounts/login.html', {'mode': 'forgot'})
+            return JsonResponse({'success': False, 'message': 'Une erreur est survenue. Veuillez recommencer.'})
     
-    return render(request, 'accounts/login.html', {'mode': 'forgot'})
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})

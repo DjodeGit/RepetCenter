@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.db.models import Q
 from accounts.decorators import admin_required
 from centre.models import AnneeAcademique, Classe, PeriodeMois
@@ -112,7 +113,19 @@ def inscrire_apprenant(request):
         frais_inscription_paye = request.POST.get('frais_inscription_paye', '') == 'on'
         mode_paiement = request.POST.get('mode_paiement', 'MENSUEL')
         
-        # Validations
+        # ⭐⭐⭐ VALIDATION PRIORITAIRE : Frais d'inscription OBLIGATOIRES ⭐⭐⭐
+        if not frais_inscription_paye:
+            messages.error(request, "❌ Les frais d'inscription doivent être payés pour valider l'inscription.")
+            return render(request, 'apprenants/inscrire.html', {
+                'apprenants_sans_inscription': apprenants_sans_inscription,
+                'classes': classes,
+                'annee_active': annee_active,
+                'mode_paiement_choices': Inscription.MODE_PAIEMENT_CHOICES,
+                'form_data': request.POST,
+                'error_frais': True
+            })
+        
+        # Validations des autres champs
         if not user_id:
             messages.error(request, "Veuillez sélectionner un apprenant.")
             return render(request, 'apprenants/inscrire.html', {
@@ -139,10 +152,9 @@ def inscrire_apprenant(request):
         # Vérifier si l'apprenant a déjà une inscription pour cette année
         if hasattr(user, 'apprenant_profil'):
             apprenant = user.apprenant_profil
-            # Vérifier si déjà inscrit cette année
             if Inscription.objects.filter(apprenant=apprenant, annee_academique=annee_active).exists():
                 messages.error(request, f"{user.get_full_name()} est déjà inscrit pour l'année {annee_active.libelle}.")
-                return redirect('liste_apprenants')
+                return redirect('apprenants:liste')
         else:
             # Créer le profil apprenant s'il n'existe pas
             apprenant = Apprenant.objects.create(
@@ -151,27 +163,23 @@ def inscrire_apprenant(request):
                 statut=Apprenant.Statut.ACTIF
             )
         
-        # Création de l'inscription
+        # ⭐⭐⭐ MAINTENANT SEULEMENT on crée l'inscription (car frais payés) ⭐⭐⭐
         inscription = Inscription.objects.create(
             apprenant=apprenant,
             annee_academique=annee_active,
             niveau=classe,
             mode_paiement=mode_paiement,
-            frais_inscription_paye=frais_inscription_paye,
-            date_paiement_inscription=timezone-now().date() if frais_inscription_paye else None,
+            frais_inscription_paye=True,  # Forcé à True car on a vérifié plus haut
+            date_paiement_inscription=timezone.now().date(),
             statut='ACTIF'
         )
         
-        # Message de succès
         message = f"✅ {user.get_full_name()} inscrit en {classe.name} pour l'année {annee_active.libelle}\n"
-        if frais_inscription_paye:
-            message += f"💰 Frais d'inscription ({classe.frais_inscription} FCFA) : PAYÉ"
-        else:
-            message += f"⚠️ Frais d'inscription ({classe.frais_inscription} FCFA) : IMPAYÉ"
+        message += f"💰 Frais d'inscription ({classe.frais_inscription} FCFA) : PAYÉ"
         
         messages.success(request, message)
         
-        return redirect('liste_apprenants')
+        return redirect('apprenants:liste')
     
     context = {
         'apprenants_sans_inscription': apprenants_sans_inscription,
@@ -180,7 +188,6 @@ def inscrire_apprenant(request):
         'mode_paiement_choices': Inscription.MODE_PAIEMENT_CHOICES,
     }
     return render(request, 'apprenants/inscrire.html', context)
-
 
 # ==================== FICHE APPRENANT ====================
 
@@ -282,7 +289,7 @@ def changer_statut_apprenant(request, inscription_id):
     Changer le statut d'une inscription (Actif, Suspendu, Sorti, Terminé)
     """
     if request.method != 'POST':
-        return redirect('liste_apprenants')
+        return redirect('apprenants:liste')
     
     inscription = get_object_or_404(Inscription, pk=inscription_id)
     nouveau_statut = request.POST.get('statut', '')
@@ -319,7 +326,7 @@ def supprimer_apprenant(request, inscription_id):
     Supprimer un apprenant (uniquement si aucune donnée associée)
     """
     if request.method != 'POST':
-        return redirect('liste_apprenants')
+        return redirect('apprenants:liste')
     
     inscription = get_object_or_404(Inscription, pk=inscription_id)
     apprenant = inscription.apprenant
@@ -338,4 +345,4 @@ def supprimer_apprenant(request, inscription_id):
     user.delete()
     
     messages.success(request, f"{nom_complet} a été supprimé avec succès.")
-    return redirect('liste_apprenants')
+    return redirect('apprenants:liste')

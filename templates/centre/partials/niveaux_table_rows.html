@@ -1,41 +1,46 @@
 {% for niveau in page_obj %}
-  <tr class="hover:bg-slate-50 transition-colors duration-200">
-    <td class="px-6 py-4">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+<tr>
+    <td class="font-medium">{{ niveau.name }}</td>
+    <td>{{ niveau.description|default:"—" }}</td>
+    <td class="text-right">
+        <span class="badge badge-neutral">{{ niveau.apprenants.count }}</span>
+    </td>
+    <td class="text-right">
+        <div class="flex items-center justify-end gap-1">
+            <button onclick='openModifierNiveauModal({{ niveau.id }}, "{{ niveau.name|escapejs }}", "{{ niveau.description|escapejs }}", {{ niveau.frais_inscription|default:0 }}, {{ niveau.frais_mensuel|default:0 }}, {{ niveau.frais_trimestriel|default:0 }}, {{ niveau.frais_annuel|default:0 }})' 
+                    class="btn-icon-sm text-brand-600 hover:text-white hover:bg-brand-600" 
+                    title="Modifier">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+            </button>
+            <button onclick="openSupprimerNiveauModal({{ niveau.id }}, '{{ niveau.name|escapejs }}')" 
+                    class="btn-icon-sm text-danger-600 hover:text-white hover:bg-danger-600" 
+                    title="Supprimer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </button>
         </div>
-        <span class="font-semibold text-slate-800">{{ niveau.name }}</span>
-      </div>
     </td>
-    <td class="px-6 py-4 text-slate-500 text-sm">{{ niveau.description|default:"—" }}</td>
-    <td class="px-6 py-4">
-      <span class="badge badge-teal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        {{ niveau.effectif }} élève{{ niveau.effectif|pluralize }}
-      </span>
-    </td>
-    <td class="px-4 py-4 text-right">
-      <div class="flex items-center justify-end gap-2">
-        <button onclick="openModifierNiveauModal({{ niveau.id }}, '{{ niveau.name|escapejs }}', '{{ niveau.description|default:''|escapejs }}', {{ niveau.frais_inscription|default:0 }}, {{ niveau.frais_mensuel|default:0 }}, {{ niveau.frais_trimestriel|default:0 }}, {{ niveau.frais_annuel|default:0 }})"
-                class="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-all duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-        </button>
-        <button onclick="openSupprimerNiveauModal({{ niveau.id }}, '{{ niveau.name|escapejs }}')"
-                class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-        </button>
-      </div>
-    </td>
-  </tr>
+</tr>
 {% empty %}
-  <tr>
-    <td colspan="4" class="px-6 py-16 text-center">
-      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-      </div>
-      <p class="text-slate-500 font-medium">Aucun niveau trouvé</p>
-      <p class="text-sm text-slate-400 mt-1">Essayez de modifier votre recherche ou cliquez sur "Nouveau niveau"</p>
+<tr>
+    <td colspan="4" class="empty-state">
+        <div class="empty-state-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+            </svg>
+        </div>
+        <p class="empty-state-title">Aucun niveau</p>
+        <p class="empty-state-text">Commencez par créer un nouveau niveau</p>
+        <button onclick="openNiveauModal()" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Créer un niveau
+        </button>
     </td>
-  </tr>
+</tr>
 {% endfor %}

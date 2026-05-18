@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Code de réinitialisation</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+    <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        
+        <!-- En-tête -->
+        <div style="background: linear-gradient(135deg, #1A3A6E 0%, #2A5298 100%); padding: 30px 20px; text-align: center;">
+            <img src="{{ site_url }}/static/images/logo-pentagone.png" 
+                 alt="Pentagone Academy" 
+                 style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 10px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Pentagone Academy</h1>
+            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0;">Centre de Formation d'Excellence</p>
+        </div>
+        
+        <!-- Contenu -->
+        <div style="padding: 30px;">
+            <h2 style="color: #1A3A6E; margin-top: 0;">Code de réinitialisation</h2>
+            
+            <p style="color: #475569; line-height: 1.6;">Bonjour <strong>{{ first_name }} {{ last_name }}</strong>,</p>
+            
+            <p style="color: #475569; line-height: 1.6;">Vous avez demandé à réinitialiser votre mot de passe. Voici votre code de validation :</p>
+            
+            <div style="background-color: #F1F5F9; padding: 20px; text-align: center; border-radius: 12px; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1A3A6E; font-family: monospace;">{{ code }}</span>
+            </div>
+            
+            <p style="color: #475569; line-height: 1.6;">Ce code est valable pendant <strong>10 minutes</strong>.</p>
+            
+            <p style="color: #475569; line-height: 1.6;">Retournez sur la page de connexion et saisissez ce code pour continuer.</p>
+            
+            <p style="color: #475569; line-height: 1.6;">Si vous n'avez pas demandé cette réinitialisation, ignorez cet email et votre mot de passe restera inchangé.</p>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="{{ site_url }}/login/" 
+                   style="display: inline-block; background-color: #2A5298; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 10px; font-weight: 600;">
+                    Retour à la connexion
+                </a>
+            </div>
+        </div>
+        
+        <!-- Pied de page -->
+        <div style="background-color: #F8FAFC; padding: 20px; text-align: center; border-top: 1px solid #E2E8F0;">
+            <p style="color: #94A3B8; font-size: 12px; margin: 0;">Pentagone Academy — Tous droits réservés</p>
+            <p style="color: #94A3B8; font-size: 12px; margin: 5px 0 0;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+        </div>
+        
+    </div>
+</body>
+</html>

@@ -23,7 +23,14 @@ class Apprenant(models.Model):
                related_name='apprenant_profil',
                verbose_name="Compte utilisateur"
            )
-
+    # Relation avec le centre
+    # je vais faire cette fonctionnalite dans la version 2
+    #centre = models.ForeignKey(
+    #    Centre,
+    #    on_delete=models.CASCADE,
+    #   related_name="apprenants",
+    #    verbose_name="Centre"
+    #)
     # Relation avec Classe
     classe = models.ForeignKey(
                  Classe,
@@ -108,6 +115,8 @@ class Inscription(models.Model):
     date_inscription = models.DateTimeField(auto_now_add=True)
     mode_paiement = models.CharField(max_length=20, choices=MODE_PAIEMENT_CHOICES, default='MENSUEL')
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='ACTIF')
+    frais_inscription_paye = models.BooleanField(default=False, verbose_name="Frais d'inscription payés")
+    date_paiement_inscription = models.DateField(null=True, blank=True, verbose_name="Date de paiement des frais d'inscription")
     
     # Gestion admin (surcharge des règles automatiques)
     delai_admin_accorde_jusqua = models.DateField(null=True, blank=True)

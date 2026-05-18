@@ -7,6 +7,13 @@ urlpatterns = [
     path('login/',            views.login_view,          name='login'),
     path('logout/',           views.logout_view,         name='logout'),
     path('mot-de-passe-oublie/', views.forgot_password, name='forgot_password'),
+    
+    
+
+
+    path('send-reset-code-ajax/', views.send_reset_code_ajax, name='send_reset_code_ajax'),
+    path('verify-reset-code-ajax/', views.verify_reset_code_ajax, name='verify_reset_code_ajax'),
+    path('create-new-password-ajax/', views.create_new_password_ajax, name='create_new_password_ajax'),
     #path('reset-password/', views.reset_password, name='reset_password'),
 
     path('dashboard/',        views.dashboard_router,    name='dashboard'),

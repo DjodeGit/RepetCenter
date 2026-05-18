@@ -1,462 +1,343 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Niveaux — RepetCenter{% endblock %}
+{% block title %}Niveaux — Pentagone Academy{% endblock %}
+
+{% block page_title %}Niveaux / Groupes{% endblock %}
+
+{% block page_actions %}
+<div class="flex items-center gap-2">
+    <button onclick="openNiveauModal()" class="btn btn-primary btn-sm whitespace-nowrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+        <span>Nouveau niveau</span>
+    </button>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto py-8">
+<div class="space-y-6">
 
-  <!-- En-tête -->
-  <div class="relative mb-8">
-    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-          </div>
-          <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-800">Niveaux / Groupes</h1>
+    <!-- Barre de recherche -->
+    <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="relative max-w-md w-full">
+                <div class="input-wrapper">
+                    <span class="input-icon-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+                    </span>
+                    <input type="text" id="search-input" placeholder="Rechercher un niveau..." class="input w-full pl-9">
+                </div>
+            </div>
+            <button id="btn-reset-filters" type="button" class="btn btn-ghost btn-sm hidden">
+                Réinitialiser
+            </button>
         </div>
-        <p class="text-slate-500 text-sm">Classes et groupes d'apprenants</p>
-      </div>
-      <button onclick="openNiveauModal()" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-        Nouveau niveau
-      </button>
     </div>
-  </div>
-
-  <!-- Barre de recherche -->
-  <div class="mb-6">
-    <div class="relative max-w-md">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
-      </div>
-      <input type="text" id="search-input" placeholder="Rechercher un niveau..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-hidden focus:border-teal-400 focus:ring-2 focus:ring-teal-400/10 transition-all duration-200">
+    <!-- Messages -->
+    <div id="messages-container">
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="alert {% if msg.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-auto-hide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0">
+                        {% if msg.tags == 'success' %}<path d="M20 6 9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>{% endif %}
+                    </svg>
+                    <div>{{ msg }}</div>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
-  </div>
 
-  <!-- Messages -->
-  <div id="messages-container">
-    {% if messages %}
-      {% for msg in messages %}
-        <div class="alert {% if msg.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} mb-4 rounded-xl alert-auto-hide">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
-            {% if msg.tags == 'success' %}<path d="M20 6 9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>{% endif %}
-          </svg>
-          <div>{{ msg }}</div>
+    <!-- Tableau des niveaux -->
+    <div class="card p-0 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Niveau</th>
+                        <th>Description</th>
+                        <th class="text-right">Effectif</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    {% include "centre/partials/niveaux_table_rows.html" %}
+                </tbody>
+            </table>
         </div>
-      {% endfor %}
-    {% endif %}
-  </div>
 
-  <!-- Indicateur de chargement global -->
-  <div id="global-loader" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 flex items-center justify-center">
-    <div class="bg-white rounded-xl shadow-xl p-6 flex flex-col items-center gap-3">
-      <svg class="animate-spin h-8 w-8 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <p class="text-slate-600 text-sm">Chargement en cours...</p>
+        <!-- Pagination -->
+        <div id="pagination-container">
+            {% include "centre/partials/niveaux_pagination.html" %}
+        </div>
     </div>
-  </div>
-
-  <!-- Tableau des niveaux -->
-  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200">
-            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Niveau</th>
-            <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
-            <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Effectif</th>
-            <th class="px-4 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          {% include "centre/partials/niveaux_table_rows.html" %}
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Pagination -->
-    <div id="pagination-container" class="px-6 py-4 border-t border-slate-200 bg-slate-50">
-      {% include "centre/partials/niveaux_pagination.html" %}
-    </div>
-  </div>
 
 </div>
 
 <!-- ========== MODAL AJOUTER NIVEAU ========== -->
-<div id="modal-ajouter-niveau" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between p-6 border-b border-slate-200 sticky top-0 bg-white">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+<div id="modal-ajouter-niveau" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="flex items-center gap-3">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                </div>
+                <h2 class="modal-title">Créer un niveau / groupe</h2>
+            </div>
+            <button onclick="closeModal('modal-ajouter-niveau')" class="modal-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </button>
         </div>
-        <h2 class="text-xl font-semibold text-slate-800">Créer un niveau / groupe</h2>
-      </div>
-      <button onclick="closeModal('modal-ajouter-niveau')" class="text-slate-400 hover:text-slate-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-      </button>
+        
+        <form method="post" action="{% url 'centre:ajouter_niveau' %}" id="form-ajouter-niveau">
+            {% csrf_token %}
+            <div class="modal-body space-y-5">
+                <div class="form-group">
+                    <label class="label label-required">Nom du niveau</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                        </span>
+                        <input type="text" name="name" class="input" placeholder="Ex: Terminale A" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Description</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </span>
+                        <textarea name="description" rows="3" class="textarea" placeholder="Description optionnelle"></textarea>
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t border-neutral-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-500"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        <h3 class="text-sm font-semibold text-neutral-700">Frais associés</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="label text-sm">Frais d'inscription ({{ centre.devise }})</label>
+                            <input type="number" name="frais_inscription" class="input" placeholder="0" step="1000" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais mensuel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_mensuel" class="input" placeholder="0" step="1000" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais trimestriel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_trimestriel" class="input" placeholder="0" step="1000" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais annuel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_annuel" class="input" placeholder="0" step="1000" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('modal-ajouter-niveau')" class="btn btn-ghost">Annuler</button>
+                <button type="submit" class="btn btn-primary">Créer le niveau</button>
+            </div>
+        </form>
     </div>
-    <form method="post" action="{% url 'centre:ajouter_niveau' %}" id="form-ajouter-niveau">
-      {% csrf_token %}
-      <div class="p-6 space-y-5">
-        <div class="space-y-2">
-          <label class="form-label font-semibold">Nom du niveau <span class="text-red-500">*</span></label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-            </div>
-            <input type="text" name="name" class="form-input w-full pl-9" placeholder="Ex: Terminale A" required>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <label class="form-label text-slate-700">Description</label>
-          <div class="relative">
-            <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <textarea name="description" rows="2" class="form-textarea w-full pl-9" placeholder="Description optionnelle"></textarea>
-          </div>
-        </div>
-        <div class="pt-4 border-t border-slate-100">
-          <div class="flex items-center gap-2 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            <h3 class="text-sm font-semibold text-slate-700">Frais associés</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais d'inscription ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_inscription" class="form-input w-full pl-8" placeholder="0" step="1000" value="0">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais mensuel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_mensuel" class="form-input w-full pl-8" placeholder="0" step="1000" value="0">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais trimestriel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_trimestriel" class="form-input w-full pl-8" placeholder="0" step="1000" value="0">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais annuel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_annuel" class="form-input w-full pl-8" placeholder="0" step="1000" value="0">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-end gap-3 p-6 pt-0 border-t border-slate-200 bg-slate-50 rounded-b-2xl sticky bottom-0">
-        <button type="button" onclick="closeModal('modal-ajouter-niveau')" class="btn btn-ghost">Annuler</button>
-        <button type="submit" class="btn btn-primary relative" id="btn-ajouter-niveau">
-          <span class="btn-text">Créer le niveau</span>
-          <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-teal-600 rounded-lg">
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          </span>
-        </button>
-      </div>
-    </form>
-  </div>
 </div>
 
 <!-- ========== MODAL MODIFIER NIVEAU ========== -->
-<div id="modal-modifier-niveau" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between p-6 border-b border-slate-200 sticky top-0 bg-white">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+<div id="modal-modifier-niveau" class="hidden modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="flex items-center gap-3">
+                <div class="icon-circle" style="background-color: var(--color-gold-100); color: var(--color-gold-700);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                </div>
+                <h2 class="modal-title">Modifier le niveau</h2>
+            </div>
+            <button onclick="closeModal('modal-modifier-niveau')" class="modal-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </button>
         </div>
-        <h2 class="text-xl font-semibold text-slate-800">Modifier le niveau</h2>
-      </div>
-      <button onclick="closeModal('modal-modifier-niveau')" class="text-slate-400 hover:text-slate-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-      </button>
+        
+        <form method="post" id="form-modifier-niveau">
+            {% csrf_token %}
+            <div class="modal-body space-y-5">
+                <input type="hidden" name="niveau_id" id="modif_niveau_id">
+                
+                <div class="form-group">
+                    <label class="label label-required">Nom du niveau</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                        </span>
+                        <input type="text" name="name" id="modif_niveau_name" class="input" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="label">Description</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </span>
+                        <textarea name="description" id="modif_niveau_desc" rows="3" class="textarea"></textarea>
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t border-neutral-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-brand-500"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        <h3 class="text-sm font-semibold text-neutral-700">Frais associés</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="label text-sm">Frais d'inscription ({{ centre.devise }})</label>
+                            <input type="number" name="frais_inscription" id="modif_niveau_frais_inscription" class="input" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais mensuel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_mensuel" id="modif_niveau_frais_mensuel" class="input" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais trimestriel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_trimestriel" id="modif_niveau_frais_trimestriel" class="input" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="label text-sm">Frais annuel ({{ centre.devise }})</label>
+                            <input type="number" name="frais_annuel" id="modif_niveau_frais_annuel" class="input" step="1000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('modal-modifier-niveau')" class="btn btn-ghost">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </form>
     </div>
-    <form method="post" id="form-modifier-niveau">
-      {% csrf_token %}
-      <div class="p-6 space-y-5">
-        <input type="hidden" name="niveau_id" id="modif_niveau_id">
-        <div class="space-y-2">
-          <label class="form-label font-semibold">Nom du niveau <span class="text-red-500">*</span></label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-            </div>
-            <input type="text" name="name" id="modif_niveau_name" class="form-input w-full pl-9" required>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <label class="form-label text-slate-700">Description</label>
-          <div class="relative">
-            <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            </div>
-            <textarea name="description" id="modif_niveau_desc" rows="2" class="form-textarea w-full pl-9"></textarea>
-          </div>
-        </div>
-        <div class="pt-4 border-t border-slate-100">
-          <div class="flex items-center gap-2 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-            <h3 class="text-sm font-semibold text-slate-700">Frais associés</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais d'inscription ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_inscription" id="modif_niveau_frais_inscription" class="form-input w-full pl-8" step="1000">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais mensuel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_mensuel" id="modif_niveau_frais_mensuel" class="form-input w-full pl-8" step="1000">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais trimestriel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_trimestriel" id="modif_niveau_frais_trimestriel" class="form-input w-full pl-8" step="1000">
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="form-label text-sm text-slate-600">Frais annuel ({{ centre.devise }})</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                </div>
-                <input type="number" name="frais_annuel" id="modif_niveau_frais_annuel" class="form-input w-full pl-8" step="1000">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-end gap-3 p-6 pt-0 border-t border-slate-200 bg-slate-50 rounded-b-2xl sticky bottom-0">
-        <button type="button" onclick="closeModal('modal-modifier-niveau')" class="btn btn-ghost">Annuler</button>
-        <button type="submit" class="btn btn-primary relative" id="btn-modifier-niveau">
-          <span class="btn-text">Enregistrer</span>
-          <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-teal-600 rounded-lg">
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          </span>
-        </button>
-      </div>
-    </form>
-  </div>
 </div>
 
 <!-- ========== MODAL SUPPRIMER NIVEAU ========== -->
-<div id="modal-supprimer-niveau" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
-    <div class="flex items-center justify-between p-6 border-b border-slate-200">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+<div id="modal-supprimer-niveau" class="hidden modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <div class="flex items-center gap-3">
+                <div class="icon-circle" style="background-color: var(--color-danger-100); color: var(--color-danger-700);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </div>
+                <h2 class="modal-title">Confirmer la suppression</h2>
+            </div>
+            <button onclick="closeModal('modal-supprimer-niveau')" class="modal-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </button>
         </div>
-        <h2 class="text-xl font-semibold text-slate-800">Confirmer la suppression</h2>
-      </div>
-      <button onclick="closeModal('modal-supprimer-niveau')" class="text-slate-400 hover:text-slate-600">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-      </button>
+        
+        <div class="modal-body">
+            <p class="text-neutral-600">Êtes-vous sûr de vouloir supprimer le niveau <strong id="suppr_niveau_nom"></strong> ?</p>
+            <div class="alert alert-danger mt-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <span>⚠️ Cette action supprimera aussi les apprenants liés.</span>
+            </div>
+        </div>
+        
+        <form method="post" id="form-supprimer-niveau" class="modal-footer">
+            {% csrf_token %}
+            <button type="button" onclick="closeModal('modal-supprimer-niveau')" class="btn btn-ghost">Annuler</button>
+            <button type="submit" class="btn btn-danger">Supprimer</button>
+        </form>
     </div>
-    <div class="p-6">
-      <p class="text-slate-600">Êtes-vous sûr de vouloir supprimer le niveau <strong id="suppr_niveau_nom"></strong> ?</p>
-      <p class="text-sm text-red-500 mt-2">⚠️ Cette action supprimera aussi les apprenants liés.</p>
-    </div>
-    <form method="post" id="form-supprimer-niveau" class="border-t border-slate-200 bg-slate-50 rounded-b-2xl p-6 flex justify-end gap-3">
-      {% csrf_token %}
-      <button type="button" onclick="closeModal('modal-supprimer-niveau')" class="btn btn-ghost">Annuler</button>
-      <button type="submit" class="btn btn-danger relative" id="btn-supprimer-niveau">
-        <span class="btn-text">Supprimer</span>
-        <span class="btn-loader hidden absolute inset-0 flex items-center justify-center bg-red-600 rounded-lg">
-          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        </span>
-      </button>
-    </form>
-  </div>
 </div>
 
 <script>
-  let searchTimeout;
-  let currentPage = 1;
-  let currentSearch = '';
-  let isLoading = false;
+    // Recherche AJAX
+    const searchInput = document.getElementById('search-input');
+    const resetBtn = document.getElementById('btn-reset-filters');
+    let searchTimeout;
 
-  const searchInput = document.getElementById('search-input');
-  const tableBody = document.getElementById('table-body');
-  const paginationContainer = document.getElementById('pagination-container');
-  const globalLoader = document.getElementById('global-loader');
-
-  function loadNiveaux() {
-    if (isLoading) return;
-    isLoading = true;
-    
-    if (globalLoader) globalLoader.classList.remove('hidden');
-    
-    const url = `${window.location.pathname}?page=${currentPage}&search=${encodeURIComponent(currentSearch)}`;
-    
-    fetch(url, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.rows_html && tableBody) {
-        tableBody.innerHTML = data.rows_html;
-      }
-      if (data.pagination_html && paginationContainer) {
-        paginationContainer.innerHTML = data.pagination_html;
-      }
-      if (globalLoader) globalLoader.classList.add('hidden');
-      isLoading = false;
-    })
-    .catch(error => {
-      console.error('Erreur:', error);
-      if (globalLoader) globalLoader.classList.add('hidden');
-      isLoading = false;
-    });
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        currentSearch = this.value;
-        currentPage = 1;
-        loadNiveaux();
-      }, 300);
-    });
-  }
-
-  function goToPage(page) {
-    if (page === currentPage) return;
-    currentPage = page;
-    loadNiveaux();
-  }
-
-  function openNiveauModal() {
-    document.getElementById('modal-ajouter-niveau').classList.remove('hidden');
-  }
-  
-  function openModifierNiveauModal(id, name, desc, frais_inscription, frais_mensuel, frais_trimestriel, frais_annuel) {
-    document.getElementById('modif_niveau_id').value = id;
-    document.getElementById('modif_niveau_name').value = name;
-    document.getElementById('modif_niveau_desc').value = desc || '';
-    document.getElementById('modif_niveau_frais_inscription').value = frais_inscription || 0;
-    document.getElementById('modif_niveau_frais_mensuel').value = frais_mensuel || 0;
-    document.getElementById('modif_niveau_frais_trimestriel').value = frais_trimestriel || 0;
-    document.getElementById('modif_niveau_frais_annuel').value = frais_annuel || 0;
-    document.getElementById('form-modifier-niveau').action = `/centre/niveaux/${id}/modifier/`;
-    document.getElementById('modal-modifier-niveau').classList.remove('hidden');
-  }
-  
-  function openSupprimerNiveauModal(id, name) {
-    document.getElementById('suppr_niveau_nom').textContent = name;
-    document.getElementById('form-supprimer-niveau').action = `/centre/niveaux/${id}/supprimer/`;
-    document.getElementById('modal-supprimer-niveau').classList.remove('hidden');
-  }
-  
-  function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-    const form = document.querySelector(`#${modalId} form`);
-    if (form) {
-      form.reset();
-      const btn = form.querySelector('button[type="submit"]');
-      if (btn) {
-        const btnText = btn.querySelector('.btn-text');
-        const btnLoader = btn.querySelector('.btn-loader');
-        if (btnText && btnLoader) {
-          btnText.classList.remove('invisible');
-          btnLoader.classList.add('hidden');
-          btn.disabled = false;
+    function performSearch() {
+        const searchValue = searchInput.value;
+        const url = new URL(window.location.href);
+        
+        if (searchValue) {
+            url.searchParams.set('search', searchValue);
+        } else {
+            url.searchParams.delete('search');
         }
-      }
+        url.searchParams.set('page', '1');
+        
+        fetch(url.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('table-body').innerHTML = data.rows_html;
+            document.getElementById('pagination-container').innerHTML = data.pagination_html;
+            
+            if (searchValue) {
+                resetBtn.classList.remove('hidden');
+            } else {
+                resetBtn.classList.add('hidden');
+            }
+            
+            // Réattacher les événements aux nouveaux boutons
+            attachButtonEvents();
+        });
     }
-  }
-  
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-      const btn = this.querySelector('button[type="submit"]');
-      if (btn) {
-        const btnText = btn.querySelector('.btn-text');
-        const btnLoader = btn.querySelector('.btn-loader');
-        if (btnText && btnLoader) {
-          btnText.classList.add('invisible');
-          btnLoader.classList.remove('hidden');
-          btn.disabled = true;
-        }
-      }
+
+    function resetSearch() {
+        searchInput.value = '';
+        performSearch();
+    }
+
+    function attachButtonEvents() {
+        // Les événements seront réattaches après chaque mise à jour AJAX
+        document.querySelectorAll('[onclick^="openModifierNiveauModal"]').forEach(btn => {
+            // Les onclick sont déjà dans le HTML
+        });
+        document.querySelectorAll('[onclick^="openSupprimerNiveauModal"]').forEach(btn => {
+            // Les onclick sont déjà dans le HTML
+        });
+    }
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
     });
-  });
-  
-  function showMessage(message, type) {
-    const container = document.getElementById('messages-container');
-    if (!container) return;
-    
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} mb-4 rounded-xl alert-auto-hide`;
-    alertDiv.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5">
-        ${type === 'success' ? '<path d="M20 6 9 17l-5-5"/>' : '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>'}
-      </svg>
-      <div>${message}</div>
-    `;
-    container.prepend(alertDiv);
-    
-    setTimeout(() => {
-      alertDiv.style.opacity = '0';
-      alertDiv.style.transform = 'translateY(-10px)';
-      setTimeout(() => alertDiv.remove(), 500);
-    }, 5000);
-  }
-  
-  document.querySelectorAll('.alert-auto-hide').forEach(alert => {
-    setTimeout(() => {
-      if (alert) {
-        alert.style.opacity = '0';
-        alert.style.transform = 'translateY(-10px)';
-        setTimeout(() => alert.remove(), 500);
-      }
-    }, 5000);
-  });
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetSearch);
+    }
+
+    // Fonctions des modales
+    function openNiveauModal() {
+        document.getElementById('modal-ajouter-niveau').classList.remove('hidden');
+    }
+
+    function openModifierNiveauModal(id, name, desc, frais_inscription, frais_mensuel, frais_trimestriel, frais_annuel) {
+        document.getElementById('modif_niveau_id').value = id;
+        document.getElementById('modif_niveau_name').value = name;
+        document.getElementById('modif_niveau_desc').value = desc || '';
+        document.getElementById('modif_niveau_frais_inscription').value = frais_inscription || 0;
+        document.getElementById('modif_niveau_frais_mensuel').value = frais_mensuel || 0;
+        document.getElementById('modif_niveau_frais_trimestriel').value = frais_trimestriel || 0;
+        document.getElementById('modif_niveau_frais_annuel').value = frais_annuel || 0;
+        document.getElementById('form-modifier-niveau').action = `/centre/niveaux/${id}/modifier/`;
+        document.getElementById('modal-modifier-niveau').classList.remove('hidden');
+    }
+
+    function openSupprimerNiveauModal(id, name) {
+        document.getElementById('suppr_niveau_nom').textContent = name;
+        document.getElementById('form-supprimer-niveau').action = `/centre/niveaux/${id}/supprimer/`;
+        document.getElementById('modal-supprimer-niveau').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        const form = document.querySelector(`#${modalId} form`);
+        if (form) form.reset();
+    }
 </script>
 
-<style>
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .card { animation: fadeInUp 0.4s ease-out forwards; }
-  .alert-auto-hide { transition: opacity 0.5s ease, transform 0.5s ease; }
-</style>
 {% endblock %}

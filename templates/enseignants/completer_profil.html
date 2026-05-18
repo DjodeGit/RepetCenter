@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compléter le profil — RepetCenter{% endblock %}
+{% block page_title %}Compléter le profil enseignant{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-8">
+
+  <div class="card shadow-xl border-0 overflow-hidden">
+    <div class="card-header bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-200">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <h2 class="card-title text-lg">Compléter le profil</h2>
+          <p class="text-xs text-slate-400">{{ enseignant.nom_complet }} - {{ enseignant.email }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-6 md:p-8">
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+          
+          <!-- Téléphone -->
+          <div class="space-y-2">
+            <label class="form-label font-semibold">Téléphone</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              {{ form.telephone }}
+            </div>
+          </div>
+          
+          <!-- Spécialité -->
+          <div class="space-y-2">
+            <label class="form-label font-semibold">Spécialité / Domaine</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              {{ form.specialite }}
+            </div>
+          </div>
+          
+          <!-- Date de recrutement -->
+          <div class="space-y-2">
+            <label class="form-label font-semibold">Date de recrutement</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              </div>
+              {{ form.date_recrutement }}
+            </div>
+          </div>
+          
+          <!-- Matières enseignées -->
+          <div class="space-y-2">
+            <label class="form-label font-semibold">Matières enseignées</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              {{ form.matieres }}
+            </div>
+            <p class="text-xs text-slate-400">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs matières</p>
+          </div>
+          
+          <!-- Niveaux/Classes -->
+          <div class="space-y-2">
+            <label class="form-label font-semibold">Niveaux / Classes affectés</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+              </div>
+              {{ form.niveaux }}
+            </div>
+            <p class="text-xs text-slate-400">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs niveaux</p>
+          </div>
+          
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
+          <a href="{% url 'enseignants:liste' %}" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            Annuler
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer le profil
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

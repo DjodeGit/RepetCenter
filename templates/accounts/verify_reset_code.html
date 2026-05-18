@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vérification du code — Pentagone Academy{% endblock %}
+{% block page_title %}Vérification du code{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto py-12">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-3">
+        <div class="icon-circle" style="background-color: var(--color-info-100); color: var(--color-info-600);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        </div>
+        <div class="min-w-0">
+          <h3 class="card-title truncate">Vérification du code</h3>
+          <p class="text-xs text-neutral-400 truncate">Étape 2 sur 3</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      
+      <div class="alert alert-success mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <div class="break-words">Un code à 6 chiffres a été envoyé à votre adresse email.</div>
+      </div>
+      
+      <form method="post" action="{% url 'verify_reset_code' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label class="label label-required">Code de validation</label>
+          <div class="input-wrapper">
+            <span class="input-icon-left">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="text" name="code" class="input w-full text-center text-2xl tracking-[0.5em] font-mono" placeholder="000000" maxlength="6" required>
+          </div>
+          <p class="field-hint">Saisissez le code reçu par email (valable 10 minutes)</p>
+        </div>
+        
+        <div class="flex flex-wrap justify-between gap-3 pt-4">
+          <a href="{% url 'forgot_password' %}" class="btn btn-ghost whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Retour
+          </a>
+          <button type="submit" class="btn btn-primary whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Vérifier le code
+          </button>
+        </div>
+      </form>
+      
+      <div class="mt-6 text-center">
+        <p class="text-xs text-neutral-400">
+          Vous n'avez pas reçu le code ? 
+          <a href="{% url 'forgot_password' %}" class="text-brand-600 hover:underline">Renvoyer le code</a>
+        </p>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>
+{% endblock %}

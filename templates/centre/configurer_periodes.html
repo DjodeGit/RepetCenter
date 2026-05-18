@@ -1,253 +1,248 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Configurer les périodes — RepetCenter{% endblock %}
+{% block title %}Configurer les périodes — Pentagone Academy{% endblock %}
 {% block page_title %}Configuration des périodes scolaires{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto py-8">
+<div class="container-responsive py-6">
 
-  <!-- En-tête avec décoration -->
-  <div class="relative mb-8">
-    <div class="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl"></div>
-    <div class="flex items-center gap-3 mb-2">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-md">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-      </div>
-      <h1 class="text-2xl md:text-3xl font-serif font-bold text-slate-800">Configuration des périodes</h1>
-    </div>
-    <p class="text-slate-500 text-sm ml-13">Définissez la structure des trimestres et des mois pour l'année scolaire</p>
-  </div>
-
-  <!-- Carte principale -->
-  <div class="card shadow-xl border-0 overflow-hidden">
-    <div class="card-header bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-200">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        </div>
-        <div>
-          <h2 class="card-title text-lg">Définir la structure de l'année</h2>
-          <p class="text-xs text-slate-400">Organisez les trimestres et les mois selon votre calendrier scolaire</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card-body p-6 md:p-8">
-      
-      <form method="post" id="periodes-form">
-        {% csrf_token %}
-        
-        <!-- Sélection de l'année académique -->
-        <div class="mb-6">
-          <label class="form-label font-semibold">Année académique <span class="text-red-500">*</span></label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+    <!-- En-tête avec décoration -->
+    <div class="relative mb-8">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex items-center gap-3 mb-2">
+            <div class="icon-circle bg-brand-500 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
             </div>
-            <select name="annee_id" class="form-select w-full pl-9 appearance-none" onchange="this.form.submit()">
-              {% for annee in annees %}
-                <option value="{{ annee.id }}" {% if annee_selectionnee and annee_selectionnee.id == annee.id %}selected{% endif %}>
-                  {{ annee.libelle }} {% if annee.is_active %}(Active){% endif %}
-                </option>
-              {% endfor %}
-            </select>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
+            <h1 class="text-2xl md:text-3xl font-bold text-brand-800">Configuration des périodes</h1>
         </div>
-        
-        {% if annee_selectionnee %}
-        <!-- Message d'information -->
-        <div class="alert alert-info mb-6 rounded-xl border-l-4 border-blue-500 bg-blue-50/80">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5 text-blue-600"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-          <div class="text-blue-800">Configurez les trimestres et les mois pour l'année <strong>{{ annee_selectionnee.libelle }}</strong>.</div>
-        </div>
-        
-        <!-- Conteneur des trimestres -->
-        <div id="trimestres-container" class="mb-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-            <label class="form-label font-semibold">Trimestres/Semestre de l'année</label>
-            <button type="button" id="ajouter-trimestre" class="btn btn-primary btn-sm shadow-sm hover:shadow-md transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-              Ajouter un trimestre/Semestre
-            </button>
-          </div>
-          <input type="hidden" name="nombre_trimestres" id="nombre_trimestres" value="0">
-          <div id="trimestres-list" class="space-y-4"></div>
-        </div>
-        
-        <!-- Actions -->
-        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-slate-200">
-          <a href="{% url 'dashboard_admin' %}" class="btn btn-ghost w-full sm:w-auto order-2 sm:order-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-            Annuler
-          </a>
-          <button type="submit" class="btn btn-primary w-full sm:w-auto order-1 sm:order-2 shadow-md hover:shadow-lg transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            Enregistrer la configuration
-          </button>
-        </div>
-        {% else %}
-        <div class="text-center py-12">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-300"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          </div>
-          <p class="text-slate-500 font-medium">Aucune année sélectionnée</p>
-          <p class="text-sm text-slate-400 mt-1">Veuillez sélectionner ou créer une année académique</p>
-        </div>
-        {% endif %}
-        
-      </form>
-      
+        <p class="text-neutral-500 text-sm ml-13">Définissez la structure des trimestres et des mois pour l'année scolaire</p>
     </div>
-  </div>
-  
+
+    <!-- Carte principale -->
+    <div class="card">
+        <div class="card-header">
+            <div class="flex items-center gap-3">
+                <div class="icon-circle bg-gold-500 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                </div>
+                <div>
+                    <h2 class="card-title">Définir la structure de l'année</h2>
+                    <p class="text-xs text-neutral-400">Organisez les trimestres et les mois selon votre calendrier scolaire</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <form method="post" id="periodes-form">
+                {% csrf_token %}
+                
+                <!-- Sélection de l'année académique -->
+                <div class="form-group">
+                    <label class="label label-required">Année académique</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </span>
+                        <select name="annee_id" class="select w-full pl-9" onchange="this.form.submit()">
+                            {% for annee in annees %}
+                                <option value="{{ annee.id }}" {% if annee_selectionnee and annee_selectionnee.id == annee.id %}selected{% endif %}>
+                                    {{ annee.libelle }} {% if annee.is_active %}(Active){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                {% if annee_selectionnee %}
+                    <!-- Message d'information -->
+                    <div class="alert alert-info mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        <div>Configurez les trimestres et les mois pour l'année <strong>{{ annee_selectionnee.libelle }}</strong>.</div>
+                    </div>
+                    
+                    <!-- Conteneur des trimestres -->
+                    <div id="trimestres-container" class="mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                            <label class="label">Trimestres/Semestre de l'année</label>
+                            <button type="button" id="ajouter-trimestre" class="btn btn-primary btn-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                                Ajouter un trimestre/Semestre
+                            </button>
+                        </div>
+                        <input type="hidden" name="nombre_trimestres" id="nombre_trimestres" value="0">
+                        <div id="trimestres-list" class="space-y-4"></div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex flex-col sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-neutral-100">
+                        <a href="{% url 'dashboard_admin' %}" class="btn btn-ghost w-full sm:w-auto order-2 sm:order-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary w-full sm:w-auto order-1 sm:order-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Enregistrer la configuration
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="empty-state py-8">
+                        <div class="empty-state-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
+                        <p class="empty-state-title">Aucune année sélectionnée</p>
+                        <p class="empty-state-text">Veuillez sélectionner ou créer une année académique</p>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>
-  let trimestreCount = 0;
-  
-  // Liste des mois prédéfinis
-  const listeMois = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-  
-  // Fonction pour réindexer les trimestres
-  function reindexerTrimestres() {
-    const trimestres = document.querySelectorAll('#trimestres-list .card');
-    let nouveauCompteur = 0;
+    let trimestreCount = 0;
     
-    trimestres.forEach((trimestre, index) => {
-      const nouveauNumero = index + 1;
-      trimestre.id = `trimestre-${nouveauNumero}`;
-      
-      const titre = trimestre.querySelector('h4');
-      if (titre) titre.textContent = `Trimestre ${nouveauNumero}`;
-      
-      const nomInput = trimestre.querySelector(`input[name^="trimestre_"][name$="_nom"]`);
-      const moisInput = trimestre.querySelector(`input[name^="trimestre_"][name$="_mois"]`);
-      
-      if (nomInput) nomInput.name = `trimestre_${nouveauNumero}_nom`;
-      if (moisInput) {
-        moisInput.name = `trimestre_${nouveauNumero}_mois`;
-        moisInput.setAttribute('onchange', `genererMois(${nouveauNumero})`);
-      }
-      
-      const moisContainer = trimestre.querySelector(`[id^="mois-"]`);
-      if (moisContainer) {
-        moisContainer.id = `mois-${nouveauNumero}`;
-        const moisSelects = moisContainer.querySelectorAll('select');
-        moisSelects.forEach((select, idx) => {
-          select.name = `trimestre_${nouveauNumero}_mois_${idx + 1}`;
+    // Liste des mois prédéfinis
+    const listeMois = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+    
+    // Fonction pour réindexer les trimestres
+    function reindexerTrimestres() {
+        const trimestres = document.querySelectorAll('#trimestres-list .card');
+        let nouveauCompteur = 0;
+        
+        trimestres.forEach((trimestre, index) => {
+            const nouveauNumero = index + 1;
+            trimestre.id = `trimestre-${nouveauNumero}`;
+            trimestre.className = 'card p-5 mb-4';
+            
+            const titre = trimestre.querySelector('h4');
+            if (titre) titre.textContent = `Trimestre ${nouveauNumero}`;
+            
+            const nomInput = trimestre.querySelector(`input[name^="trimestre_"][name$="_nom"]`);
+            const moisInput = trimestre.querySelector(`input[name^="trimestre_"][name$="_mois"]`);
+            
+            if (nomInput) nomInput.name = `trimestre_${nouveauNumero}_nom`;
+            if (moisInput) {
+                moisInput.name = `trimestre_${nouveauNumero}_mois`;
+                moisInput.setAttribute('onchange', `genererMois(${nouveauNumero})`);
+            }
+            
+            const moisContainer = trimestre.querySelector(`[id^="mois-"]`);
+            if (moisContainer) {
+                moisContainer.id = `mois-${nouveauNumero}`;
+                moisContainer.className = 'grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100';
+                const moisSelects = moisContainer.querySelectorAll('select');
+                moisSelects.forEach((select, idx) => {
+                    select.name = `trimestre_${nouveauNumero}_mois_${idx + 1}`;
+                });
+            }
+            
+            const deleteBtn = trimestre.querySelector('button[onclick^="supprimerTrimestre"]');
+            if (deleteBtn) deleteBtn.setAttribute('onclick', `supprimerTrimestre(${nouveauNumero})`);
+            
+            nouveauCompteur++;
         });
-      }
-      
-      const deleteBtn = trimestre.querySelector('button[onclick^="supprimerTrimestre"]');
-      if (deleteBtn) deleteBtn.setAttribute('onclick', `supprimerTrimestre(${nouveauNumero})`);
-      
-      nouveauCompteur++;
+        
+        trimestreCount = nouveauCompteur;
+        document.getElementById('nombre_trimestres').value = trimestreCount;
+    }
+    
+    function ajouterTrimestre() {
+        trimestreCount++;
+        document.getElementById('nombre_trimestres').value = trimestreCount;
+        
+        const container = document.getElementById('trimestres-list');
+        const trimestreDiv = document.createElement('div');
+        trimestreDiv.className = 'card p-5 mb-4';
+        trimestreDiv.id = `trimestre-${trimestreCount}`;
+        
+        trimestreDiv.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="font-semibold text-brand-800 text-base font-display">Trimestre ${trimestreCount}</h4>
+                <button type="button" class="p-1.5 text-neutral-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-all duration-200" onclick="supprimerTrimestre(${trimestreCount})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="label text-sm">Nom du trimestre</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </span>
+                        <input type="text" name="trimestre_${trimestreCount}_nom" class="input w-full pl-8" value="Trimestre ${trimestreCount}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="label text-sm">Nombre de mois</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        </span>
+                        <input type="number" name="trimestre_${trimestreCount}_mois" class="input w-full pl-8" min="1" max="12" value="3" required onchange="genererMois(${trimestreCount})">
+                    </div>
+                </div>
+            </div>
+            <div id="mois-${trimestreCount}" class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-neutral-100"></div>
+        `;
+        
+        container.appendChild(trimestreDiv);
+        genererMois(trimestreCount);
+    }
+    
+    function genererMois(trimestreId) {
+        const moisInput = document.querySelector(`input[name="trimestre_${trimestreId}_mois"]`);
+        const nbMois = parseInt(moisInput.value) || 0;
+        const container = document.getElementById(`mois-${trimestreId}`);
+        if (!container) return;
+        container.innerHTML = '';
+        
+        for (let i = 1; i <= nbMois; i++) {
+            const moisDiv = document.createElement('div');
+            moisDiv.className = 'form-group';
+            
+            let optionsHtml = '<option value="">-- Sélectionner un mois --</option>';
+            for (let m = 0; m < listeMois.length; m++) {
+                optionsHtml += `<option value="${listeMois[m]}">${listeMois[m]}</option>`;
+            }
+            
+            moisDiv.innerHTML = `
+                <label class="label text-xs font-medium text-neutral-600">Mois ${i}</label>
+                <div class="input-wrapper">
+                    <span class="input-icon-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    </span>
+                    <select name="trimestre_${trimestreId}_mois_${i}" class="select w-full pl-7 text-sm" required>
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+            container.appendChild(moisDiv);
+        }
+    }
+    
+    function supprimerTrimestre(id) {
+        const element = document.getElementById(`trimestre-${id}`);
+        if (element) {
+            element.remove();
+            reindexerTrimestres();
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const addButton = document.getElementById('ajouter-trimestre');
+        if (addButton) {
+            addButton.addEventListener('click', ajouterTrimestre);
+        }
+        
+        const container = document.getElementById('trimestres-list');
+        if (container && container.children.length === 0 && {{ annee_selectionnee|yesno:"true,false" }}) {
+            ajouterTrimestre();
+        }
     });
-    
-    trimestreCount = nouveauCompteur;
-    document.getElementById('nombre_trimestres').value = trimestreCount;
-  }
-  
-  function ajouterTrimestre() {
-    trimestreCount++;
-    document.getElementById('nombre_trimestres').value = trimestreCount;
-    
-    const container = document.getElementById('trimestres-list');
-    const trimestreDiv = document.createElement('div');
-    trimestreDiv.className = 'card p-5 border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200';
-    trimestreDiv.id = `trimestre-${trimestreCount}`;
-    
-    trimestreDiv.innerHTML = `
-      <div class="flex justify-between items-center mb-4">
-        <h4 class="font-semibold text-slate-700 text-base">Trimestre ${trimestreCount}</h4>
-        <button type="button" class="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200" onclick="supprimerTrimestre(${trimestreCount})">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div class="space-y-2">
-          <label class="form-label text-sm font-semibold">Nom du trimestre</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            </div>
-            <input type="text" name="trimestre_${trimestreCount}_nom" class="form-input w-full pl-8" value="Trimestre ${trimestreCount}" required>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <label class="form-label text-sm font-semibold">Nombre de mois</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            </div>
-            <input type="number" name="trimestre_${trimestreCount}_mois" class="form-input w-full pl-8" min="1" max="12" value="3" required onchange="genererMois(${trimestreCount})">
-          </div>
-        </div>
-      </div>
-      <div id="mois-${trimestreCount}" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-100"></div>
-    `;
-    
-    container.appendChild(trimestreDiv);
-    genererMois(trimestreCount);
-  }
-  
-  function genererMois(trimestreId) {
-    const moisInput = document.querySelector(`input[name="trimestre_${trimestreId}_mois"]`);
-    const nbMois = parseInt(moisInput.value) || 0;
-    const container = document.getElementById(`mois-${trimestreId}`);
-    if (!container) return;
-    container.innerHTML = '';
-    
-    for (let i = 1; i <= nbMois; i++) {
-      const moisDiv = document.createElement('div');
-      moisDiv.className = 'space-y-2';
-      
-      // Création d'un select pour choisir le mois
-      let optionsHtml = '';
-      for (let m = 0; m < listeMois.length; m++) {
-        optionsHtml += `<option value="${listeMois[m]}">${listeMois[m]}</option>`;
-      }
-      
-      moisDiv.innerHTML = `
-        <label class="form-label text-xs font-medium text-slate-600">Mois ${i}</label>
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-          </div>
-          <select name="trimestre_${trimestreId}_mois_${i}" class="form-select w-full pl-7 text-sm appearance-none" required>
-            <option value="">-- Sélectionner un mois --</option>
-            ${optionsHtml}
-          </select>
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      `;
-      container.appendChild(moisDiv);
-    }
-  }
-  
-  function supprimerTrimestre(id) {
-    const element = document.getElementById(`trimestre-${id}`);
-    if (element) {
-      element.remove();
-      reindexerTrimestres();
-    }
-  }
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    const addButton = document.getElementById('ajouter-trimestre');
-    if (addButton) {
-      addButton.addEventListener('click', ajouterTrimestre);
-    }
-    
-    const container = document.getElementById('trimestres-list');
-    if (container && container.children.length === 0 && {{ annee_selectionnee|yesno:"true,false" }}) {
-      ajouterTrimestre();
-    }
-  });
 </script>
 {% endblock %}
