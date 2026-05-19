@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Traiter un signalement — Pentagone Academy{% endblock %}
+{% block page_title %}Traiter le signalement{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fade-in-up">
+    <div class="flex items-center gap-2 text-xs text-neutral-400 mb-5"><a href="{% url 'emploidutemps:requete_liste' %}"
+            class="hover:text-brand-600 transition">Signalements</a><span>›</span><span
+            class="text-neutral-600 font-medium">Traiter</span></div>
+    <div class="card mb-6">
+        <div class="card-header bg-neutral-50">
+            <h3 class="card-title text-sm">Détail du signalement</h3>
+        </div>
+        <div class="card-body space-y-4">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><span class="text-neutral-500">Enseignant :</span>
+                    <p class="font-medium">{{ requete.enseignant.user.get_full_name }}</p>
+                </div>
+                <div><span class="text-neutral-500">Signalé le :</span>
+                    <p class="font-medium">{{ requete.signale_le|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div><span class="text-neutral-500">Séance :</span>
+                    <p class="font-medium">{{ requete.seance.matiere.nom }} - {{ requete.seance.classe.nom }}</p>
+                    <p class="text-xs text-neutral-400">{{ requete.seance.jour|date:"d/m/Y" }} ({{
+                        requete.seance.heure_debut|time:"H:i" }} - {{ requete.seance.heure_fin|time:"H:i" }})</p>
+                </div>
+                <div><span class="text-neutral-500">Enseignant concerné :</span>
+                    <p class="font-medium">{{ requete.seance.enseignant.user.get_full_name }}</p>
+                </div>
+            </div>
+            <div><span class="text-neutral-500">Message :</span>
+                <div class="p-3 bg-neutral-50 rounded-lg mt-1 text-sm">{{ requete.message }}</div>
+            </div>
+        </div>
+    </div>
+    <form method="post" novalidate>{% csrf_token %}
+        <div class="card">
+            <div class="card-header">
+                <div class="flex items-center gap-3">
+                    <div class="icon-circle bg-brand-100 text-brand-700"><svg xmlns="http://www.w3.org/2000/svg"
+                            width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    <div>
+                        <h2 class="card-title">Résolution du signalement</h2>
+                        <p class="text-xs text-neutral-400">Apportez une réponse à l'enseignant</p>
+                    </div>
+                </div>
+            </div>
+            {% if form.non_field_errors %}<div class="alert alert-danger mb-4"><svg xmlns="http://www.w3.org/2000/svg"
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div>{{ form.non_field_errors.0 }}</div>
+            </div>{% endif %}
+            <div class="space-y-5">
+                <div class="form-group"><label class="label label-required">Statut</label>{{ form.statut }}{% if
+                    form.statut.errors %}<p class="field-error">{{ form.statut.errors.0 }}</p>{% endif %}</div>
+                <div class="form-group"><label class="label label-required">Message de résolution</label>{{
+                    form.resolution_message }}{% if form.resolution_message.errors %}<p class="field-error">{{
+                        form.resolution_message.errors.0 }}</p>{% endif %}<p class="field-hint">Expliquez la solution
+                        apportée ou la raison du rejet</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6"><a href="{% url 'emploidutemps:requete_liste' %}"
+                class="btn btn-secondary"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>Annuler</a><button type="submit" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg"
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>Enregistrer la résolution</button></div>
+    </form>
+</div>
+{% endblock %}
