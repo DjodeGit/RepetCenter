@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Signaler un problème — Pentagone Academy{% endblock %}
+{% block page_title %}Signaler un conflit{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fade-in-up">
+    <div class="flex items-center gap-2 text-xs text-neutral-400 mb-5"><a href="{% url 'emploidutemps:emploi_liste' %}"
+            class="hover:text-brand-600 transition">Emplois du temps</a><span>›</span><a
+            href="{% url 'emploidutemps:emploi_detail' seance.emploi_du_temps.pk %}"
+            class="hover:text-brand-600 transition">{{ seance.emploi_du_temps.titre }}</a><span>›</span><span
+            class="text-neutral-600 font-medium">Signaler un problème</span></div>
+    <div class="alert alert-info mb-6"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div>
+            <p class="font-medium">Séance concernée</p>
+            <p class="text-sm">{{ seance.matiere.nom }} - {{ seance.classe.nom }} - {{ seance.jour|date:"d/m/Y" }} ({{
+                seance.heure_debut|time:"H:i" }} - {{ seance.heure_fin|time:"H:i" }})</p>
+        </div>
+    </div>
+    <form method="post" novalidate>{% csrf_token %}
+        <div class="card">
+            <div class="card-header">
+                <div class="flex items-center gap-3">
+                    <div class="icon-circle bg-warning-100 text-warning-700"><svg xmlns="http://www.w3.org/2000/svg"
+                            width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg></div>
+                    <div>
+                        <h2 class="card-title">Décrivez le problème</h2>
+                        <p class="text-xs text-neutral-400">L'administration traitera votre signalement dans les plus
+                            brefs délais</p>
+                    </div>
+                </div>
+            </div>
+            {% if form.non_field_errors %}<div class="alert alert-danger mb-4"><svg xmlns="http://www.w3.org/2000/svg"
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div>{{ form.non_field_errors.0 }}</div>
+            </div>{% endif %}
+            <div class="form-group"><label class="label label-required">Message</label>{{ form.message }}{% if
+                form.message.errors %}<p class="field-error">{{ form.message.errors.0 }}</p>{% endif %}<p
+                    class="field-hint">Décrivez précisément le problème (conflit horaire, salle indisponible, etc.)</p>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6"><a
+                href="{% url 'emploidutemps:emploi_detail' seance.emploi_du_temps.pk %}" class="btn btn-secondary"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>Annuler</a><button type="submit" class="btn btn-warning"><svg xmlns="http://www.w3.org/2000/svg"
+                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>Envoyer le signalement</button></div>
+    </form>
+</div>
+{% endblock %}
