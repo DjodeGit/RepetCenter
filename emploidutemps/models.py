@@ -48,8 +48,6 @@ class EmploiDuTemps(models.Model):
                       )
     date_debut      = models.DateField(verbose_name="Date de début")
     date_fin        = models.DateField(verbose_name="Date de fin")
-    annee_scolaire  = models.CharField(max_length=20, verbose_name="Année scolaire")
-
     # Relations supplémentaires nécessaires
     annee_academique = models.ForeignKey(
                            AnneeAcademique,

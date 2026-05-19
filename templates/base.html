@@ -138,8 +138,46 @@
                 
                 <div class="pa-divider"></div>
                 <div class="pa-section-label">Pédagogie</div>
-                
-                <a href="#" class="pa-item">Emploi du temps</a>
+
+
+                <!-- Lien vers l'emploi du temps -->
+                <a href="{% url 'emploidutemps:emploi_liste' %}" class="pa-item" data-url="emploi_liste">
+                    <span class="pa-item-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </span>
+                    <span>Emploi du temps</span>
+                </a>
+
+                <!-- Sous-menu pour la gestion des salles (optionnel) -->
+                <div class="dropdown-container">
+                    <button data-dropdown="edt-submenu" class="pa-toggle-btn" id="edt-toggle">
+                        <div class="toggle-text">
+                            <span class="pa-item-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </span>
+                            <span>Configuration EDT</span>
+                        </div>
+                        <svg class="chevron-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                        <svg class="close-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </button>
+                    <div id="edt-submenu" class="pa-submenu">
+                        <a href="{% url 'emploidutemps:salle_liste' %}" class="pa-item">Gestion des salles</a>
+                        <a href="{% url 'emploidutemps:emploi_creer' %}" class="pa-item">Créer un EDT</a>
+                        <a href="{% url 'emploidutemps:requete_liste' %}" class="pa-item">Signalements</a>
+                    </div>
+                </div>
                 <a href="#" class="pa-item">Présences</a>
                 <a href="#" class="pa-item">Paiements</a>
                 <a href="#" class="pa-item">Évaluations</a>

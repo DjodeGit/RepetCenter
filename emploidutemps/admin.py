@@ -13,16 +13,16 @@ class SalleAdmin(admin.ModelAdmin):
 
 @admin.register(EmploiDuTemps)
 class EmploiDuTempsAdmin(admin.ModelAdmin):
-    list_display = ['titre', 'get_status_display', 'date_debut', 'date_fin', 'annee_scolaire', 'cree_par', 'created_at']
-    list_filter = ['status', 'annee_scolaire', 'created_at']
-    search_fields = ['titre', 'annee_scolaire']
+    list_display = ['titre', 'get_status_display', 'date_debut', 'date_fin', 'annee_academique', 'cree_par', 'created_at']
+    list_filter = ['status', 'annee_academique', 'created_at']
+    search_fields = ['titre', 'annee_aacademique']
     list_select_related = ['annee_academique', 'cree_par']
     readonly_fields = ['created_at', 'updated_at', 'date_publication']
     list_per_page = 20
     
     fieldsets = (
         ('Informations générales', {
-            'fields': ('titre', 'status', 'annee_scolaire')
+            'fields': ('titre', 'status')
         }),
         ('Période', {
             'fields': ('date_debut', 'date_fin', 'annee_academique')
@@ -54,7 +54,7 @@ class EmploiDuTempsAdmin(admin.ModelAdmin):
 @admin.register(Semaine)
 class SemaineAdmin(admin.ModelAdmin):
     list_display = ['numero_semaine', 'emploi_du_temps', 'date_debut', 'date_fin', 'jours_ouverts']
-    list_filter = ['emploi_du_temps__status', 'emploi_du_temps__annee_scolaire']
+    list_filter = ['emploi_du_temps__status', 'emploi_du_temps__annee_academique']
     search_fields = ['emploi_du_temps__titre', 'numero_semaine']
     list_select_related = ['emploi_du_temps']
     list_per_page = 20

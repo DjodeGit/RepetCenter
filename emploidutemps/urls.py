@@ -20,6 +20,7 @@ urlpatterns = [
     path("<int:pk>/supprimer/",         views.emploi_supprimer,     name="emploi_supprimer"),
 
     # ==================== SEMAINES ====================
+    #path('planning/semaine/', views.planning_semaine, name='planning_semaine'),
     path("<int:emploi_pk>/semaine/ajouter/",    views.semaine_ajouter,      name="semaine_ajouter"),
 
     # ==================== SÉANCES ====================

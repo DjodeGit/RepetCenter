@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} — Pentagone Academy{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fade-in-up">
+  <div class="flex items-center gap-2 text-xs text-neutral-400 mb-5">
+    <a href="{% url 'emploidutemps:emploi_liste' %}" class="hover:text-brand-600 transition">Emplois du temps</a>
+    <span>›</span>
+    <a href="{% url 'emploidutemps:emploi_detail' emploi.pk %}" class="hover:text-brand-600 transition">{{ emploi.titre }}</a>
+    <span>›</span>
+    <span class="text-neutral-600 font-medium">{{ page_title }}</span>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center gap-3">
+          <div class="icon-circle bg-brand-100 text-brand-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="card-title">Détails de la séance</h2>
+            <p class="text-xs text-neutral-400">Les conflits horaires sont détectés automatiquement</p>
+          </div>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>{{ form.non_field_errors.0 }}</div>
+        </div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="form-group">
+          <label class="label label-required">Date</label>
+          {{ form.jour }}
+          {% if form.jour.errors %}
+            <p class="field-error">{{ form.jour.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label label-required">Classe</label>
+          {{ form.classe }}
+          {% if form.classe.errors %}
+            <p class="field-error">{{ form.classe.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label label-required">Matière</label>
+          {{ form.matiere }}
+          {% if form.matiere.errors %}
+            <p class="field-error">{{ form.matiere.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label label-required">Enseignant</label>
+          {{ form.enseignant }}
+          {% if form.enseignant.errors %}
+            <p class="field-error">{{ form.enseignant.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label label-required">Heure début</label>
+          {{ form.heure_debut }}
+          {% if form.heure_debut.errors %}
+            <p class="field-error">{{ form.heure_debut.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label label-required">Heure fin</label>
+          {{ form.heure_fin }}
+          {% if form.heure_fin.errors %}
+            <p class="field-error">{{ form.heure_fin.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label">Salle</label>
+          {{ form.salle }}
+          {% if form.salle.errors %}
+            <p class="field-error">{{ form.salle.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="label">Statut</label>
+          {{ form.status }}
+          {% if form.status.errors %}
+            <p class="field-error">{{ form.status.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group md:col-span-2">
+          <label class="label">Motif d'annulation</label>
+          {{ form.motif_annulation }}
+          {% if form.motif_annulation.errors %}
+            <p class="field-error">{{ form.motif_annulation.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group md:col-span-2">
+          <label class="flex items-center gap-3 cursor-pointer">
+            {{ form.est_recurrent }}
+            <span class="text-sm font-medium text-neutral-700">Cours récurrent (chaque semaine)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <p class="text-sm">Le système vérifie automatiquement qu'un enseignant, une salle ou une classe n'est pas déjà occupé(e) sur le même créneau.</p>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <a href="{% url 'emploidutemps:emploi_detail' emploi.pk %}" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Annuler
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Enregistrer la séance
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

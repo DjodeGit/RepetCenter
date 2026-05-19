@@ -5,92 +5,262 @@
 
 {% block content %}
 <div class="container-responsive animate-fade-in-up">
+    
+    <!-- Filtres -->
     <div class="card mb-6">
         <div class="card-body">
-            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="form-group"><label class="label">Statut</label><select name="status" class="select"
-                        onchange="this.form.submit()">
-                        <option value="">Tous</option>{% for value, label in status_choices %}<option
-                            value="{{ value }}" {% if request.GET.status==value %}selected{% endif %}>{{ label }}
-                        </option>{% endfor %}
-                    </select></div>
-                <div class="form-group"><label class="label">Année scolaire</label><select name="annee" class="select"
-                        onchange="this.form.submit()">
-                        <option value="">Toutes</option>{% for annee in annees_scolaires %}<option value="{{ annee }}"
-                            {% if request.GET.annee==annee %}selected{% endif %}>{{ annee }}</option>{% endfor %}
-                    </select></div>
-                <div class="form-group flex items-end"><a href="{% url 'emploidutemps:emploi_liste' %}"
-                        class="btn btn-secondary w-full">Réinitialiser</a></div>
+            <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Filtre Statut -->
+                <div class="form-group">
+                    <label class="label">Statut</label>
+                    <select name="status" class="select" onchange="this.form.submit()">
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filtre_status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filtre Année Académique -->
+                <div class="form-group">
+                    <label class="label">Année académique</label>
+                    <select name="annee_academique" class="select" onchange="this.form.submit()">
+                        <option value="">Toutes les années</option>
+                        {% for annee in annees_academiques %}
+                            <option value="{{ annee.id }}" {% if filtre_annee_academique|add:"0" == annee.id %}selected{% endif %}>
+                                {{ annee.libelle }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filtre Mois -->
+                <div class="form-group">
+                    <label class="label">Mois</label>
+                    <select name="mois" class="select" onchange="this.form.submit()">
+                        <option value="">Tous les mois</option>
+                        {% for option in mois_options %}
+                            <option value="{{ option.valeur }}" {% if filtre_mois == option.valeur %}selected{% endif %}>
+                                {{ option.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Bouton Réinitialiser -->
+                 <div class="form-group flex items-end">
+                    {% if filtre_status or filtre_annee_academique or filtre_mois %}
+                        <a href="{% url 'emploidutemps:emploi_liste' %}" class="btn btn-secondary w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                            </svg>
+                            Réinitialiser
+                        </a>
+                    {% else %}
+                        <!-- Espace vide pour garder l'alignement (optionnel) -->
+                        <div class="w-full"></div>
+                    {% endif %}
+                </div>
+                
             </form>
         </div>
     </div>
-    <div class="flex justify-end mb-6"><a href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary"><svg
-                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>Nouvel emploi du temps</a></div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{% for emploi in page_obj %}<div
-            class="card card-hover">
-            <div class="flex justify-between items-start mb-4"><span
-                    class="badge {% if emploi.is_publie %}badge-success{% else %}badge-warning{% endif %}">{{
-                    emploi.get_status_display }}</span>
-                <div class="flex gap-1"><a href="{% url 'emploidutemps:emploi_detail' emploi.pk %}"
-                        class="btn btn-icon-sm" title="Voir"><svg xmlns="http://www.w3.org/2000/svg" width="14"
-                            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg></a><a href="{% url 'emploidutemps:emploi_modifier' emploi.pk %}" class="btn btn-icon-sm"
-                        title="Modifier"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        </svg></a></div>
+
+    <!-- Message indiquant les filtres actifs -->
+    {% if filtre_status or filtre_annee_academique or filtre_mois %}
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="text-xs text-neutral-500">Filtres actifs :</span>
+            {% if filtre_status %}
+                <span class="badge badge-brand text-xs">
+                    Statut : 
+                    {% for value, label in status_choices %}
+                        {% if filtre_status == value %}{{ label }}{% endif %}
+                    {% endfor %}
+                    <button type="button" onclick="supprimerFiltre('status')" class="ml-1 hover:text-red-500">&times;</button>
+                </span>
+            {% endif %}
+            {% if filtre_annee_academique %}
+                <span class="badge badge-brand text-xs">
+                    Année : 
+                    {% for annee in annees_academiques %}
+                        {% if filtre_annee_academique|add:"0" == annee.id %}{{ annee.libelle }}{% endif %}
+                    {% endfor %}
+                    <button type="button" onclick="supprimerFiltre('annee_academique')" class="ml-1 hover:text-red-500">&times;</button>
+                </span>
+            {% endif %}
+            {% if filtre_mois %}
+                <span class="badge badge-brand text-xs">
+                    Mois : 
+                    {% for option in mois_options %}
+                        {% if filtre_mois == option.valeur %}{{ option.label }}{% endif %}
+                    {% endfor %}
+                    <button type="button" onclick="supprimerFiltre('mois')" class="ml-1 hover:text-red-500">&times;</button>
+                </span>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Bouton Créer -->
+    <div class="flex justify-end mb-6">
+        <a href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nouvel emploi du temps
+        </a>
+    </div>
+
+    <!-- Liste des emplois du temps -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for emploi in page_obj %}
+            <div class="card card-hover">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="badge {% if emploi.is_publie %}badge-success{% else %}badge-warning{% endif %}">
+                        {{ emploi.get_status_display }}
+                    </span>
+                    <div class="flex gap-1">
+                        <a href="{% url 'emploidutemps:emploi_detail' emploi.pk %}" class="btn btn-icon-sm" title="Voir">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </a>
+                        <a href="{% url 'emploidutemps:emploi_modifier' emploi.pk %}" class="btn btn-icon-sm" title="Modifier">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            </svg>
+                        </a>
+                        <!-- Bouton SUPPRIMER -->
+                        <button type="button" onclick="openDeleteModal({{ emploi.pk }}, '{{ emploi.titre|escapejs }}')" class="btn btn-icon-sm text-red-400 hover:bg-red-50" title="Supprimer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6 18.1 20a2 2 0 0 1-2 1.9H7.9a2 2 0 0 1-2-1.9L5 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-bold text-brand-800 mb-2 font-display">{{ emploi.titre }}</h3>
+                
+                <div class="space-y-2 text-sm text-neutral-600 mb-4">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>{{ emploi.date_debut|date:"d M Y" }} - {{ emploi.date_fin|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <span>{{ emploi.annee_academique.libelle|default:"Année non définie" }}</span>
+                    </div>
+                </div>
+                
+                <div class="pt-3 border-t border-neutral-100 flex justify-between items-center text-xs text-neutral-400">
+                    <span>Créé le {{ emploi.created_at|date:"d/m/Y" }}</span>
+                    {% if not emploi.is_publie and request.user.is_admin %}
+                        <a href="{% url 'emploidutemps:emploi_publier' emploi.pk %}" class="text-brand-600 hover:underline" onclick="return confirm('Publier cet emploi du temps ?')">
+                            Publier
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-            <h3 class="text-lg font-bold text-brand-800 mb-2 font-display">{{ emploi.titre }}</h3>
-            <div class="space-y-2 text-sm text-neutral-600 mb-4">
-                <div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg><span>{{ emploi.date_debut|date:"d M Y" }} - {{ emploi.date_fin|date:"d M Y" }}</span></div>
-                <div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 6v6l4 2" />
-                    </svg><span>{{ emploi.annee_scolaire }}</span></div>
+        {% empty %}
+            <div class="col-span-full">
+                <div class="empty-state py-12">
+                    <div class="empty-state-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <p class="empty-state-title">Aucun emploi du temps</p>
+                    <p class="empty-state-text">Créez votre premier emploi du temps</p>
+                    <a href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary btn-sm mt-2">
+                        Nouvel emploi du temps
+                    </a>
+                </div>
             </div>
-            <div class="pt-3 border-t border-neutral-100 flex justify-between items-center text-xs text-neutral-400">
-                <span>Créé le {{ emploi.created_at|date:"d/m/Y" }}</span>{% if not emploi.is_publie %}<a
-                    href="{% url 'emploidutemps:emploi_publier' emploi.pk %}" class="text-brand-600 hover:underline"
-                    onclick="return confirm('Publier cet emploi du temps ?')">Publier</a>{% endif %}</div>
-        </div>{% empty %}<div class="col-span-full">
-            <div class="empty-state py-12">
-                <div class="empty-state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg></div>
-                <p class="empty-state-title">Aucun emploi du temps</p>
-                <p class="empty-state-text">Créez votre premier emploi du temps</p><a
-                    href="{% url 'emploidutemps:emploi_creer' %}" class="btn btn-primary btn-sm mt-2">Nouvel emploi du
-                    temps</a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="flex justify-center mt-8">
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if filtre_status %}&status={{ filtre_status }}{% endif %}{% if filtre_annee_academique %}&annee_academique={{ filtre_annee_academique }}{% endif %}{% if filtre_mois %}&mois={{ filtre_mois }}{% endif %}" class="page-btn">«</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if filtre_status %}&status={{ filtre_status }}{% endif %}{% if filtre_annee_academique %}&annee_academique={{ filtre_annee_academique }}{% endif %}{% if filtre_mois %}&mois={{ filtre_mois }}{% endif %}" class="page-btn">‹</a>
+                {% endif %}
+                
+                <span class="page-btn page-btn-active">{{ page_obj.number }}</span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if filtre_status %}&status={{ filtre_status }}{% endif %}{% if filtre_annee_academique %}&annee_academique={{ filtre_annee_academique }}{% endif %}{% if filtre_mois %}&mois={{ filtre_mois }}{% endif %}" class="page-btn">›</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if filtre_status %}&status={{ filtre_status }}{% endif %}{% if filtre_annee_academique %}&annee_academique={{ filtre_annee_academique }}{% endif %}{% if filtre_mois %}&mois={{ filtre_mois }}{% endif %}" class="page-btn">»</a>
+                {% endif %}
             </div>
-        </div>{% endfor %}</div>
-    {% if page_obj.has_other_pages %}<div class="flex justify-center mt-8">
-        <div class="pagination">{% if page_obj.has_previous %}<a
-                href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
-                class="page-btn">«</a><a
-                href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
-                class="page-btn">‹</a>{% endif %}<span class="page-btn page-btn-active">{{ page_obj.number }}</span>{%
-            if page_obj.has_next %}<a
-                href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
-                class="page-btn">›</a><a
-                href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.annee %}&annee={{ request.GET.annee }}{% endif %}"
-                class="page-btn">»</a>{% endif %}</div>
-    </div>{% endif %}
+        </div>
+    {% endif %}
+    
 </div>
+
+<!-- Modale de confirmation de suppression -->
+<div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3 class="modal-title">Confirmer la suppression</h3>
+            <button type="button" onclick="closeDeleteModal()" class="modal-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-500">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6 18.1 20a2 2 0 0 1-2 1.9H7.9a2 2 0 0 1-2-1.9L5 6"/>
+                </svg>
+            </div>
+            <p class="text-neutral-700 mb-2">
+                Êtes-vous sûr de vouloir supprimer l'emploi du temps<br>
+                <strong id="deleteEmploiTitre" class="text-brand-700"></strong> ?
+            </p>
+            <p class="text-xs text-neutral-400">Cette action est irréversible.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Annuler
+            </button>
+            <form id="deleteForm" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6 18.1 20a2 2 0 0 1-2 1.9H7.9a2 2 0 0 1-2-1.9L5 6"/>
+                    </svg>
+                    Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="/static/js/emploi/supp_emploi.js"></script>
 {% endblock %}

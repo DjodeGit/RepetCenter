@@ -61,7 +61,7 @@ def salle_liste(request):
         'filtre_actif': est_active,
         'page_title': 'Gestion des salles',
     }
-    return render(request, 'schedule/salle_liste.html', context)
+    return render(request, 'emploidutemps/salle_liste.html', context)
 
 
 @admin_required
@@ -72,7 +72,7 @@ def salle_creer(request):
         if form.is_valid():
             salle = form.save()
             messages.success(request, f"Salle '{salle.nom}' créée avec succès")
-            return redirect('schedule:salle_liste')
+            return redirect('emploidutemps:salle_liste')
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -83,7 +83,7 @@ def salle_creer(request):
         'titre': 'Créer une salle',
         'page_title': 'Nouvelle salle',
     }
-    return render(request, 'schedule/salle_form.html', context)
+    return render(request, 'emploidutemps/salle_form.html', context)
 
 
 @admin_required
@@ -96,7 +96,7 @@ def salle_modifier(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f"Salle '{salle.nom}' modifiée avec succès")
-            return redirect('schedule:salle_liste')
+            return redirect('emploidutemps:salle_liste')
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -108,7 +108,7 @@ def salle_modifier(request, pk):
         'titre': 'Modifier la salle',
         'page_title': 'Modifier salle',
     }
-    return render(request, 'schedule/salle_form.html', context)
+    return render(request, 'emploidutemps/salle_form.html', context)
 
 
 @admin_required
@@ -129,38 +129,82 @@ def salle_supprimer(request, pk):
         'salle': salle,
         'page_title': 'Supprimer salle',
     }
-    return render(request, 'schedule/salle_confirm_delete.html', context)
+    return render(request, 'emploidutemps/salle_confirm_delete.html', context)
 
 
 # ==================== EMPLOIS DU TEMPS ====================
 
 @login_required
 def emploi_liste(request):
-    """Liste des emplois du temps"""
+    """Liste des emplois du temps avec filtres (statut, année académique, mois)"""
+    from centre.models import AnneeAcademique
+    from datetime import date
+    
     emplois = EmploiDuTemps.objects.select_related('annee_academique', 'cree_par').all()
     
-    # Filtres
+    # ========== 1. FILTRE PAR STATUT ==========
     status = request.GET.get('status')
-    annee = request.GET.get('annee')
-    
     if status:
         emplois = emplois.filter(status=status)
-    if annee:
-        emplois = emplois.filter(annee_scolaire=annee)
     
-    paginator = Paginator(emplois, 15)
+    # ========== 2. FILTRE PAR ANNÉE ACADÉMIQUE ==========
+    annee_academique_id = request.GET.get('annee_academique')
+    if annee_academique_id:
+        emplois = emplois.filter(annee_academique_id=annee_academique_id)
+    
+    # ========== 3. FILTRE PAR MOIS ==========
+    mois = request.GET.get('mois')
+    if mois:
+        try:
+            annee, mois_num = mois.split('-')
+            debut_mois = date(int(annee), int(mois_num), 1)
+            
+            # Calculer la fin du mois
+            if int(mois_num) == 12:
+                fin_mois = date(int(annee) + 1, 1, 1)
+            else:
+                fin_mois = date(int(annee), int(mois_num) + 1, 1)
+            
+            # Un EDT est dans le mois si sa période TOUCHE le mois
+            emplois = emplois.filter(
+                date_debut__lt=fin_mois,
+                date_fin__gte=debut_mois
+            )
+        except:
+            pass
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(emplois, 10)  # 10 emplois par page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    
+    # Récupérer toutes les années académiques pour le filtre
+    annees_academiques = AnneeAcademique.objects.filter(is_active=True).order_by('-libelle')
+    
+    # Générer les options des mois pour le filtre
+    from datetime import datetime, timedelta
+    mois_options = []
+    for i in range(12):
+        date_mois = datetime.now().date().replace(day=1) - timedelta(days=i*30)
+        mois_options.append({
+            'valeur': date_mois.strftime('%Y-%m'),
+            'label': date_mois.strftime('%B %Y').capitalize()
+        })
+    mois_options.reverse()  # Du plus récent au plus ancien
     
     context = {
         'page_obj': page_obj,
         'emplois': page_obj,
         'status_choices': EmploiDuTemps.Statut.choices,
-        'annees_scolaires': EmploiDuTemps.objects.values_list('annee_scolaire', flat=True).distinct(),
+        'annees_academiques': annees_academiques,
+        'mois_options': mois_options,
+        'filtre_status': request.GET.get('status', ''),
+        'filtre_annee_academique': request.GET.get('annee_academique', ''),
+        'filtre_mois': request.GET.get('mois', ''),
         'page_title': 'Emplois du temps',
     }
-    return render(request, 'schedule/emploi_liste.html', context)
-
+    return render(request, 'emploidutemps/emploi_liste.html', context)
 
 @admin_required
 def emploi_creer(request):
@@ -172,7 +216,7 @@ def emploi_creer(request):
             emploi.cree_par = request.user
             emploi.save()
             messages.success(request, f"Emploi du temps '{emploi.titre}' créé avec succès")
-            return redirect('schedule:emploi_detail', pk=emploi.pk)
+            return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -183,7 +227,7 @@ def emploi_creer(request):
         'titre': 'Créer un emploi du temps',
         'page_title': 'Nouvel emploi du temps',
     }
-    return render(request, 'schedule/emploi_form.html', context)
+    return render(request, 'emploidutemps/emploi_form.html', context)
 
 
 @admin_required
@@ -196,7 +240,7 @@ def emploi_modifier(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f"Emploi du temps '{emploi.titre}' modifié avec succès")
-            return redirect('schedule:emploi_detail', pk=emploi.pk)
+            return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -208,38 +252,118 @@ def emploi_modifier(request, pk):
         'titre': 'Modifier l\'emploi du temps',
         'page_title': 'Modifier emploi du temps',
     }
-    return render(request, 'schedule/emploi_form.html', context)
+    return render(request, 'emploidutemps/emploi_form.html', context)
 
 
 @login_required
 def emploi_detail(request, pk):
-    """Détail d'un emploi du temps avec ses semaines et séances"""
-    emploi = get_object_or_404(
-        EmploiDuTemps.objects.prefetch_related(
-            'semaines__journees',
-            'seances__matiere',
-            'seances__enseignant__user',
-            'seances__classe',
-            'seances__salle'
-        ),
-        pk=pk
-    )
+    """Détail d'un emploi du temps avec tableau récapitulatif des séances"""
+    emploi = get_object_or_404(EmploiDuTemps, pk=pk)
     
-    # Récupérer les séances groupées par jour pour l'affichage
-    seances_par_jour = {}
-    for seance in emploi.seances.select_related('matiere', 'enseignant__user', 'classe', 'salle'):
-        jour_key = seance.jour
-        if jour_key not in seances_par_jour:
-            seances_par_jour[jour_key] = []
-        seances_par_jour[jour_key].append(seance)
+    # Récupérer toutes les séances
+    seances = emploi.seances.select_related(
+        'matiere', 'enseignant__user', 'classe', 'salle'
+    ).all()
+    
+    # Récupérer les classes pour le filtre
+    from centre.models import Classe
+    from enseignants.models import Enseignant
+    from .models import Salle
+    
+    classes = Classe.objects.filter(is_active=True).order_by('name')
+    enseignants = Enseignant.objects.filter(statut='ACTIF').select_related('user')
+    salles = Salle.objects.filter(est_active=True).order_by('nom')
+    
+    # Filtres
+    classe_id = request.GET.get('classe')
+    enseignant_id = request.GET.get('enseignant')
+    salle_id = request.GET.get('salle')
+    
+    classe_filter = None
+    enseignant_filter = None
+    salle_filter = None
+    
+    if classe_id:
+        try:
+            classe_filter = Classe.objects.get(id=classe_id)
+            seances = seances.filter(classe_id=classe_id)
+        except Classe.DoesNotExist:
+            pass
+    
+    if enseignant_id:
+        try:
+            enseignant_filter = Enseignant.objects.get(id=enseignant_id)
+            seances = seances.filter(enseignant_id=enseignant_id)
+        except Enseignant.DoesNotExist:
+            pass
+    
+    if salle_id:
+        try:
+            salle_filter = Salle.objects.get(id=salle_id)
+            seances = seances.filter(salle_id=salle_id)
+        except Salle.DoesNotExist:
+            pass
+    
+    # Générer les jours de la semaine (Lundi à Dimanche) sur la période de l'EDT
+    from datetime import datetime, timedelta
+    date_courante = emploi.date_debut
+    jours_semaine = []
+    while date_courante <= emploi.date_fin:
+        jours_semaine.append({
+            'date': date_courante,
+            'nom': date_courante.strftime('%A %d/%m').capitalize(),
+            'jour_num': date_courante.weekday()
+        })
+        date_courante += timedelta(days=1)
+    
+    # Récupérer tous les créneaux horaires uniques et les trier
+    creneaux_set = set()
+    for seance in seances:
+        horaire = f"{seance.heure_debut.strftime('%H:%M')} - {seance.heure_fin.strftime('%H:%M')}"
+        creneaux_set.add(horaire)
+    
+    def extraire_heure_debut(creneau):
+        heure_str = creneau.split(' - ')[0]
+        return int(heure_str.split(':')[0]) * 60 + int(heure_str.split(':')[1])
+    
+    creneaux_horaires = sorted(list(creneaux_set), key=extraire_heure_debut)
+    
+    # Construire la grille
+    grille = {}
+    for jour in jours_semaine:
+        jour_key = jour['date'].strftime('%Y-%m-%d')
+        grille[jour_key] = {}
+        for horaire in creneaux_horaires:
+            grille[jour_key][horaire] = []
+    
+    for seance in seances:
+        jour_key = seance.jour.strftime('%Y-%m-%d')
+        horaire = f"{seance.heure_debut.strftime('%H:%M')} - {seance.heure_fin.strftime('%H:%M')}"
+        if jour_key in grille and horaire in grille[jour_key]:
+            grille[jour_key][horaire].append(seance)
+    
+    # Récupérer les conflits non résolus
+    conflits = Requete.objects.filter(
+        seance__emploi_du_temps=emploi,
+        statut=Requete.Statut.EN_ATTENTE
+    ).select_related('enseignant__user', 'seance')
     
     context = {
         'emploi': emploi,
-        'seances_par_jour': seances_par_jour,
+        'jours_semaine': jours_semaine,
+        'creneaux_horaires': creneaux_horaires,
+        'grille': grille,
+        'conflits': conflits,
+        # Filtres
+        'classes': classes,
+        'enseignants': enseignants,
+        'salles': salles,
+        'classe_filter': classe_filter,
+        'enseignant_filter': enseignant_filter,
+        'salle_filter': salle_filter,
         'page_title': emploi.titre,
     }
-    return render(request, 'schedule/emploi_detail.html', context)
-
+    return render(request, 'emploidutemps/emploi_detail.html', context)
 
 @admin_required
 def emploi_publier(request, pk):
@@ -249,7 +373,7 @@ def emploi_publier(request, pk):
     emploi.date_publication = timezone.now()
     emploi.save()
     messages.success(request, f"L'emploi du temps '{emploi.titre}' a été publié")
-    return redirect('schedule:emploi_detail', pk=emploi.pk)
+    return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
 
 
 @admin_required
@@ -262,7 +386,6 @@ def emploi_dupliquer(request, pk):
         titre=f"{emploi_original.titre} (copie)",
         date_debut=emploi_original.date_debut,
         date_fin=emploi_original.date_fin,
-        annee_scolaire=emploi_original.annee_scolaire,
         annee_academique=emploi_original.annee_academique,
         status=EmploiDuTemps.Statut.BROUILLON,
         cree_par=request.user
@@ -304,7 +427,7 @@ def emploi_dupliquer(request, pk):
         )
     
     messages.success(request, "L'emploi du temps a été dupliqué avec succès")
-    return redirect('schedule:emploi_modifier', pk=emploi_copy.pk)
+    return redirect('emploidutemps:emploi_modifier', pk=emploi_copy.pk)
 
 
 @admin_required
@@ -316,13 +439,13 @@ def emploi_supprimer(request, pk):
         titre = emploi.titre
         emploi.delete()
         messages.success(request, f"Emploi du temps '{titre}' supprimé avec succès")
-        return redirect('schedule:emploi_liste')
+        return redirect('emploidutemps:emploi_liste')
     
     context = {
         'emploi': emploi,
         'page_title': 'Supprimer emploi du temps',
     }
-    return render(request, 'schedule/emploi_confirm_delete.html', context)
+    return render(request, 'emploidutemps/emploi_confirm_delete.html', context)
 
 
 # ==================== SEMAINES ====================
@@ -360,7 +483,7 @@ def semaine_ajouter(request, emploi_pk):
                 date_courante += timedelta(days=1)
             
             messages.success(request, f"Semaine {semaine.numero_semaine} ajoutée avec succès")
-            return redirect('schedule:emploi_detail', pk=emploi.pk)
+            return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -372,7 +495,7 @@ def semaine_ajouter(request, emploi_pk):
         'titre': 'Ajouter une semaine',
         'page_title': 'Nouvelle semaine',
     }
-    return render(request, 'schedule/semaine_form.html', context)
+    return render(request, 'emploidutemps/semaine_form.html', context)
 
 
 # ==================== SÉANCES ====================
@@ -388,8 +511,8 @@ def seance_ajouter(request, emploi_pk):
             seance = form.save(commit=False)
             seance.emploi_du_temps = emploi
             seance.save()
-            messages.success(request, f"Séance de {seance.matiere.nom} ajoutée avec succès")
-            return redirect('schedule:emploi_detail', pk=emploi.pk)
+            messages.success(request, f"Séance de {seance.matiere.name} ajoutée avec succès")
+            return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -401,7 +524,7 @@ def seance_ajouter(request, emploi_pk):
         'titre': 'Ajouter une séance',
         'page_title': 'Nouvelle séance',
     }
-    return render(request, 'schedule/seance_form.html', context)
+    return render(request, 'emploidutemps/seance_form.html', context)
 
 
 @admin_required
@@ -445,7 +568,7 @@ def seance_ajouter_recurrente(request, emploi_pk):
                 date_courante += timedelta(days=1)
             
             messages.success(request, f"{seances_crees} séances récurrentes créées avec succès")
-            return redirect('schedule:emploi_detail', pk=emploi.pk)
+            return redirect('emploidutemps:emploi_detail', pk=emploi.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -457,20 +580,21 @@ def seance_ajouter_recurrente(request, emploi_pk):
         'titre': 'Ajouter une séance récurrente',
         'page_title': 'Séance récurrente',
     }
-    return render(request, 'schedule/seance_form_recurrente.html', context)
+    return render(request, 'emploidutemps/seance_form_recurrente.html', context)
 
 
 @admin_required
 def seance_modifier(request, pk):
     """Modifier une séance"""
     seance = get_object_or_404(Seance, pk=pk)
+    emploi = seance.emploi_du_temps
     
     if request.method == 'POST':
         form = SeanceForm(request.POST, instance=seance, emploi_du_temps=seance.emploi_du_temps)
         if form.is_valid():
             form.save()
             messages.success(request, "Séance modifiée avec succès")
-            return redirect('schedule:emploi_detail', pk=seance.emploi_du_temps.pk)
+            return redirect('emploidutemps:emploi_detail', pk=seance.emploi_du_temps.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -479,10 +603,11 @@ def seance_modifier(request, pk):
     context = {
         'form': form,
         'seance': seance,
+        'emploi': emploi, 
         'titre': 'Modifier la séance',
         'page_title': 'Modifier séance',
     }
-    return render(request, 'schedule/seance_form.html', context)
+    return render(request, 'emploidutemps/seance_form.html', context)
 
 
 @admin_required
@@ -494,13 +619,13 @@ def seance_supprimer(request, pk):
     if request.method == 'POST':
         seance.delete()
         messages.success(request, "Séance supprimée avec succès")
-        return redirect('schedule:emploi_detail', pk=emploi_pk)
+        return redirect('emploidutemps:emploi_detail', pk=emploi_pk)
     
     context = {
         'seance': seance,
         'page_title': 'Supprimer séance',
     }
-    return render(request, 'schedule/seance_confirm_delete.html', context)
+    return render(request, 'emploidutemps/seance_confirm_delete.html', context)
 
 
 @enseignant_required
@@ -511,7 +636,7 @@ def seance_changer_statut(request, pk):
     # Vérifier les permissions
     if not (request.user.is_admin or request.user == seance.enseignant.user):
         messages.error(request, "Vous n'êtes pas autorisé à modifier cette séance")
-        return redirect('schedule:emploi_detail', pk=seance.emploi_du_temps.pk)
+        return redirect('emploidutemps:emploi_detail', pk=seance.emploi_du_temps.pk)
     
     if request.method == 'POST':
         nouveau_statut = request.POST.get('statut')
@@ -526,7 +651,7 @@ def seance_changer_statut(request, pk):
         else:
             messages.error(request, "Statut invalide")
     
-    return redirect('schedule:emploi_detail', pk=seance.emploi_du_temps.pk)
+    return redirect('emploidutemps:emploi_detail', pk=seance.emploi_du_temps.pk)
 
 
 # ==================== REQUÊTES/CONFLITS ====================
@@ -539,7 +664,7 @@ def requete_creer(request, seance_pk):
     # Vérifier que l'utilisateur est l'enseignant concerné ou un admin
     if not (request.user.is_admin or request.user == seance.enseignant.user):
         messages.error(request, "Vous n'êtes pas autorisé à signaler cette séance")
-        return redirect('schedule:emploi_detail', pk=seance.emploi_du_temps.pk)
+        return redirect('emploidutemps:emploi_detail', pk=seance.emploi_du_temps.pk)
     
     if request.method == 'POST':
         form = RequeteForm(request.POST, seance=seance, enseignant=seance.enseignant)
@@ -549,7 +674,7 @@ def requete_creer(request, seance_pk):
             requete.enseignant = seance.enseignant
             requete.save()
             messages.success(request, "Votre signalement a été envoyé à l'administration")
-            return redirect('schedule:emploi_detail', pk=seance.emploi_du_temps.pk)
+            return redirect('emploidutemps:emploi_detail', pk=seance.emploi_du_temps.pk)
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -561,7 +686,7 @@ def requete_creer(request, seance_pk):
         'titre': 'Signaler un problème',
         'page_title': 'Signaler un conflit',
     }
-    return render(request, 'schedule/requete_form.html', context)
+    return render(request, 'emploidutemps/requete_form.html', context)
 
 
 @admin_required
@@ -582,7 +707,7 @@ def requete_liste(request):
         'statut_choices': Requete.Statut.choices,
         'page_title': 'Signalements',
     }
-    return render(request, 'schedule/requete_liste.html', context)
+    return render(request, 'emploidutemps/requete_liste.html', context)
 
 
 @admin_required
@@ -599,7 +724,7 @@ def requete_traiter(request, pk):
             requete.traite_par = request.user
             requete.save()
             messages.success(request, "La requête a été traitée")
-            return redirect('schedule:requete_liste')
+            return redirect('emploidutemps:requete_liste')
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous")
     else:
@@ -610,7 +735,7 @@ def requete_traiter(request, pk):
         'requete': requete,
         'page_title': 'Traiter un signalement',
     }
-    return render(request, 'schedule/requete_traiter.html', context)
+    return render(request, 'emploidutemps/requete_traiter.html', context)
 
 
 # ==================== VUES PUBLIQUES (PLANNINGS) ====================
@@ -642,9 +767,9 @@ def planning_classe(request, classe_id):
         'classe': classe,
         'emploi': emploi_actif,
         'seances': seances,
-        'page_title': f'Planning - {classe.nom}',
+        'page_title': f'Planning - {classe.name}',
     }
-    return render(request, 'schedule/planning_classe.html', context)
+    return render(request, 'emploidutemps/planning_classe.html', context)
 
 
 @login_required
@@ -673,7 +798,7 @@ def planning_enseignant(request):
         'seances': seances,
         'page_title': 'Mon planning',
     }
-    return render(request, 'schedule/planning_enseignant.html', context)
+    return render(request, 'emploidutemps/planning_enseignant.html', context)
 
 
 @login_required
@@ -698,7 +823,7 @@ def planning_salle(request, salle_id):
         'seances': seances,
         'page_title': f'Planning - {salle.nom}',
     }
-    return render(request, 'schedule/planning_salle.html', context)
+    return render(request, 'emploidutemps/planning_salle.html', context)
 
 
 # ==================== API ====================
@@ -712,13 +837,13 @@ def api_emploi_json(request, pk):
     for seance in emploi.seances.select_related('matiere', 'classe', 'enseignant__user', 'salle'):
         events.append({
             'id': seance.pk,
-            'title': f"{seance.matiere.nom} - {seance.classe.nom}",
+            'title': f"{seance.matiere.nom} - {seance.classe.name}",
             'start': f"{seance.jour}T{seance.heure_debut}",
             'end': f"{seance.jour}T{seance.heure_fin}",
             'extendedProps': {
                 'enseignant': seance.enseignant.user.get_full_name(),
                 'matiere': seance.matiere.nom,
-                'classe': seance.classe.nom,
+                'classe': seance.classe.name,
                 'salle': seance.salle.nom if seance.salle else 'Non assignée',
                 'status': seance.get_status_display(),
             },

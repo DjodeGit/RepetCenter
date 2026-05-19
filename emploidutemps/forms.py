@@ -55,12 +55,11 @@ class EmploiDuTempsForm(forms.ModelForm):
 
     class Meta:
         model = EmploiDuTemps
-        fields = ['titre', 'date_debut', 'date_fin', 'annee_scolaire', 'annee_academique', 'status']
+        fields = ['titre', 'date_debut', 'date_fin', 'annee_academique', 'status']
         widgets = {
             'titre': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Ex: Emploi du temps - Premier trimestre 2025'}),
             'date_debut': forms.DateInput(attrs={'class': INPUT, 'type': 'date'}),
             'date_fin': forms.DateInput(attrs={'class': INPUT, 'type': 'date'}),
-            'annee_scolaire': forms.TextInput(attrs={'class': INPUT, 'placeholder': 'Ex: 2025-2026'}),
             'annee_academique': forms.Select(attrs={'class': SELECT}),
             'status': forms.Select(attrs={'class': SELECT}),
         }
@@ -137,13 +136,13 @@ class SeanceForm(forms.ModelForm):
             'motif_annulation': forms.Textarea(attrs={'class': TEXTAREA, 'rows': 2, 'placeholder': 'Motif d\'annulation...'}),
         }
 
+ 
     def __init__(self, *args, **kwargs):
         self.emploi_du_temps = kwargs.pop('emploi_du_temps', None)
         super().__init__(*args, **kwargs)
-
         # Filtrer les choix disponibles
-        self.fields['matiere'].queryset = Matiere.objects.filter(est_active=True)
-        self.fields['classe'].queryset = Classe.objects.filter(est_active=True)
+        self.fields['matiere'].queryset = Matiere.objects.filter(is_active=True)
+        self.fields['classe'].queryset = Classe.objects.filter(is_active=True)
         self.fields['salle'].queryset = Salle.objects.filter(est_active=True)
         self.fields['enseignant'].queryset = Enseignant.objects.filter(statut='ACTIF').select_related('user')
         self.fields['enseignant'].label_from_instance = lambda obj: obj.user.get_full_name() if obj.user else str(obj)
@@ -183,7 +182,7 @@ class SeanceForm(forms.ModelForm):
                 raise ValidationError(
                     f"L'enseignant {enseignant.user.get_full_name()} a déjà un cours "
                     f"le {seance_conflict.jour} de {seance_conflict.heure_debut} à {seance_conflict.heure_fin} "
-                    f"avec la classe {seance_conflict.classe.nom}"
+                    f"avec la classe {seance_conflict.classe.name}"
                 )
 
         # Vérifier les conflits pour la classe
@@ -322,7 +321,7 @@ class PlanningFiltreForm(forms.Form):
     """Formulaire de filtrage pour l'affichage des plannings"""
 
     classe = forms.ModelChoiceField(
-        queryset=Classe.objects.filter(est_active=True),
+        queryset=Classe.objects.filter(is_active=True),
         required=False,
         widget=forms.Select(attrs={'class': SELECT}),
         label="Classe"
@@ -358,4 +357,3 @@ class PlanningFiltreForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['enseignant'].label_from_instance = lambda obj: obj.user.get_full_name() if obj.user else str(obj)
         self.fields['salle'].label_from_instance = lambda obj: f"{obj.nom} ({obj.code})"
-        
